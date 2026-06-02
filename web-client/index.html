@@ -343,6 +343,8 @@ let isPipDragging = false;
 let pipOffset = { x: 0, y: 0 };
 let isWindowFullscreen = false;
 let viewerInited = false;
+let viewerResetCount = 0;
+const MAX_VIEWER_RESETS = 5;
 let reconnectAttempts = 0;
 let maxReconnectAttempts = 20;
 let reconnectTimer = null;
@@ -571,6 +573,7 @@ function initViewer() {
   if (viewerInited) return;
   if (!window.MediaSource) { viewerPlaceholder.innerHTML = '<p>浏览器不支持播放直播流</p>'; return; }
 
+  viewerResetCount = 0;
   const codec = 'video/webm;codecs=vp8';
   if (!MediaSource.isTypeSupported(codec)) {
     console.error('[Viewer] Codec not supported:', codec);
@@ -698,7 +701,30 @@ function pruneBuffer() {
 }
 
 function resetViewer() {
-  console.log('[Viewer] Resetting viewer...');
+  viewerResetCount++;
+  console.log('[Viewer] Resetting viewer... (attempt', viewerResetCount, '/', MAX_VIEWER_RESETS, ')');
+
+  if (viewerResetCount >= MAX_VIEWER_RESETS) {
+    console.error('[Viewer] Too many resets, giving up');
+    sourceBufferQueue = [];
+    isSourceBufferBusy = false;
+    if (sourceBuffer) {
+      try { if (mediaSource && mediaSource.readyState === 'open') mediaSource.removeSourceBuffer(sourceBuffer); } catch(e) {}
+      sourceBuffer = null;
+    }
+    if (mediaSource) {
+      try { if (mediaSource.readyState === 'open') mediaSource.endOfStream(); } catch(e) {}
+      URL.revokeObjectURL(viewerVideo.src);
+      mediaSource = null;
+    }
+    viewerVideo.src = '';
+    viewerVideo.style.display = 'none';
+    viewerPlaceholder.innerHTML = '<p>⚠️ 直播播放失败，请刷新页面重试</p>';
+    viewerPlaceholder.style.display = 'block';
+    viewerInited = false;
+    return;
+  }
+
   sourceBufferQueue = [];
   isSourceBufferBusy = false;
   if (sourceBuffer) {
@@ -713,15 +739,16 @@ function resetViewer() {
   viewerVideo.src = '';
   viewerVideo.style.display = 'none';
   viewerPlaceholder.style.display = 'block';
+  viewerPlaceholder.innerHTML = '<p>正在重新连接直播流...</p>';
   viewerInited = false;
   if (isLiveActive) {
-    console.log('[Viewer] Live still active, will re-init in 500ms');
-    setTimeout(() => { if (isLiveActive && !viewerInited) initViewer(); }, 500);
+    setTimeout(() => { if (isLiveActive && !viewerInited) initViewer(); }, 1000);
   }
 }
 
 function cleanupViewer() {
   console.log('[Viewer] Cleaning up viewer');
+  viewerResetCount = 0;
   closePip();
   exitWindowFullscreen();
   sourceBufferQueue = [];
