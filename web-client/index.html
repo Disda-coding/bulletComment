@@ -1150,7 +1150,6 @@ function renderVoteList() {
   let html = '';
   activeVotes.forEach(vote => {
     const totalVotes = vote.options.reduce((sum, o) => sum + o.count, 0);
-    const hasVoted = myVotedIds.has(vote.id) || (vote.voters && Object.keys(vote.voters).length > 0 && vote.voters[clientIp || ''] !== undefined) || (vote.voters && vote.voters[nickname || ''] !== undefined);
     const nickname = document.getElementById('nicknameInput').value.trim();
     const voterKey = nickname || clientIp || '';
     const iVoted = vote.voters && vote.voters[voterKey] !== undefined;
