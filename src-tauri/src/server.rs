@@ -50,18 +50,14 @@ fn generate_self_signed_cert() -> Result<(String, String), String> {
     Ok((cert.pem(), key_pair.serialize_pem()))
 }
 
+const LOG_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../logs");
+
 pub fn save_danmaku_log(log: &[String]) -> Result<String, String> {
     if log.is_empty() {
         return Ok("".into());
     }
 
-    let exe_dir = std::env::current_exe()
-        .map_err(|e| format!("Failed to get exe dir: {}", e))?
-        .parent()
-        .map(|p| p.to_path_buf())
-        .unwrap_or_else(|| std::path::PathBuf::from("."));
-
-    let logs_dir = exe_dir.join("logs");
+    let logs_dir = std::path::PathBuf::from(LOG_DIR);
     std::fs::create_dir_all(&logs_dir)
         .map_err(|e| format!("Failed to create logs dir: {}", e))?;
 
@@ -227,7 +223,7 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
                             let content = parsed["content"].as_str().unwrap_or("");
                             let nickname = parsed["nickname"].as_str().unwrap_or("");
                             let device = parsed["device"].as_str().unwrap_or("");
-                            let color = parsed["color"].as_str().unwrap_or("#FFFFFF");
+                            let _color = parsed["color"].as_str().unwrap_or("#FFFFFF");
                             let time = Local::now().format("%H:%M:%S").to_string();
                             let sender_name = if !nickname.is_empty() {
                                 format!("{} ({})", nickname, ip_for_log)
