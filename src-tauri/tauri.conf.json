@@ -16,7 +16,7 @@
         "label": "main",
         "title": "弹幕系统 - 控制面板",
         "width": 420,
-        "height": 520,
+        "height": 620,
         "center": true,
         "resizable": true,
         "decorations": true
