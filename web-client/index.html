@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>课堂弹幕</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --bg: #0f172a;
+  --card: #1e293b;
+  --border: #334155;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --success: #22c55e;
+  --danger: #ef4444;
+}
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+.header {
+  text-align: center;
+  padding: 16px 0;
+}
+.header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-light), #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  transition: background 0.3s;
+}
+.status-dot.connected { background: var(--success); }
+.recent-section {
+  flex: 1;
+  min-height: 0;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+}
+.recent-title {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.recent-list {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.recent-item {
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  background: var(--card);
+  font-size: 14px;
+  animation: fadeIn 0.3s ease;
+}
+.recent-item .danmaku-text {
+  word-break: break-all;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.input-section {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.color-picker {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.color-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.color-btn:hover { transform: scale(1.15); }
+.color-btn.active {
+  border-color: white;
+  box-shadow: 0 0 0 2px var(--primary);
+}
+.input-row {
+  display: flex;
+  gap: 8px;
+}
+.input-row input {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input-row input:focus {
+  border-color: var(--primary);
+}
+.input-row input::placeholder {
+  color: var(--text-muted);
+}
+.send-btn {
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.send-btn:hover { background: var(--primary-light); }
+.send-btn:active { transform: scale(0.96); }
+.send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.error-msg {
+  text-align: center;
+  color: var(--danger);
+  font-size: 14px;
+  padding: 20px;
+}
+.connecting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 16px;
+}
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>课堂弹幕</h1>
+    <div class="status-bar">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">连接中...</span>
+      <span id="onlineCount"></span>
+    </div>
+  </div>
+
+  <div id="connectingOverlay" class="connecting">
+    <div class="spinner"></div>
+    <span>正在连接服务器...</span>
+  </div>
+
+  <div id="mainContent" style="display:none; flex:1; flex-direction:column; min-height:0;">
+    <div class="recent-section">
+      <div class="recent-title">最近弹幕</div>
+      <div class="recent-list" id="recentList"></div>
+    </div>
+    <div class="input-section">
+      <div class="color-picker" id="colorPicker"></div>
+      <div class="input-row">
+        <input type="text" id="danmakuInput" placeholder="输入弹幕..." maxlength="100" autocomplete="off">
+        <button class="send-btn" id="sendBtn">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="errorOverlay" style="display:none;" class="connecting">
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+</div>
+
+<script>
+const COLORS = [
+  { value: '#FFFFFF', label: '白' },
+  { value: '#FACC15', label: '黄' },
+  { value: '#60A5FA', label: '蓝' },
+  { value: '#4ADE80', label: '绿' },
+  { value: '#F87171', label: '红' },
+  { value: '#C084FC', label: '紫' },
+  { value: '#FB923C', label: '橙' },
+];
+
+let ws = null;
+let selectedColor = COLORS[0].value;
+const recentList = document.getElementById('recentList');
+const danmakuInput = document.getElementById('danmakuInput');
+const sendBtn = document.getElementById('sendBtn');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const onlineCount = document.getElementById('onlineCount');
+const connectingOverlay = document.getElementById('connectingOverlay');
+const mainContent = document.getElementById('mainContent');
+const errorOverlay = document.getElementById('errorOverlay');
+const errorMsg = document.getElementById('errorMsg');
+const colorPicker = document.getElementById('colorPicker');
+
+function initColorPicker() {
+  COLORS.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'color-btn' + (i === 0 ? ' active' : '');
+    btn.style.background = c.value;
+    btn.title = c.label;
+    btn.onclick = () => {
+      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedColor = c.value;
+    };
+    colorPicker.appendChild(btn);
+  });
+}
+
+function showView(view) {
+  connectingOverlay.style.display = 'none';
+  mainContent.style.display = 'none';
+  errorOverlay.style.display = 'none';
+  if (view === 'connecting') connectingOverlay.style.display = 'flex';
+  else if (view === 'main') mainContent.style.display = 'flex';
+  else if (view === 'error') errorOverlay.style.display = 'flex';
+}
+
+function connect() {
+  showView('connecting');
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = protocol + '//' + location.host + '/ws';
+
+  ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    statusDot.classList.add('connected');
+    statusText.textContent = '已连接';
+    showView('main');
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'danmaku') {
+        addRecentItem(msg.content, msg.color);
+      } else if (msg.type === 'online_count') {
+        onlineCount.textContent = '在线: ' + msg.count + '人';
+      } else if (msg.type === 'system') {
+        if (msg.action === 'connected') {
+          statusText.textContent = '已连接';
+        }
+      }
+    } catch (e) {}
+  };
+
+  ws.onclose = () => {
+    statusDot.classList.remove('connected');
+    statusText.textContent = '已断开';
+    showView('error');
+    errorMsg.textContent = '连接已断开，3秒后重连...';
+    setTimeout(connect, 3000);
+  };
+
+  ws.onerror = () => {
+    statusDot.classList.remove('connected');
+    statusText.textContent = '连接失败';
+    showView('error');
+    errorMsg.textContent = '无法连接到服务器，请检查地址';
+  };
+}
+
+function addRecentItem(text, color) {
+  const item = document.createElement('div');
+  item.className = 'recent-item';
+  const span = document.createElement('span');
+  span.className = 'danmaku-text';
+  span.style.color = color || '#fff';
+  span.textContent = text;
+  item.appendChild(span);
+  recentList.insertBefore(item, recentList.firstChild);
+  while (recentList.children.length > 50) {
+    recentList.removeChild(recentList.lastChild);
+  }
+}
+
+function sendDanmaku() {
+  const content = danmakuInput.value.trim();
+  if (!content || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+  const msg = JSON.stringify({
+    type: 'danmaku',
+    content: content,
+    color: selectedColor,
+    size: 24
+  });
+
+  ws.send(msg);
+  danmakuInput.value = '';
+  danmakuInput.focus();
+}
+
+sendBtn.onclick = sendDanmaku;
+danmakuInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    sendDanmaku();
+  }
+});
+
+initColorPicker();
+connect();
+</script>
+</body>
+</html>
