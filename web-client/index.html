@@ -1174,10 +1174,6 @@ function renderVoteList() {
       html += '</button></div>';
     });
 
-    if (!vote.closed) {
-      html += '<button class="vote-close-btn" onclick="closeVote(\'' + vote.id + '\')">结束投票</button>';
-    }
-
     html += '</div>';
   });
 
