@@ -351,11 +351,11 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
   <div id="voteTab" class="tab-content" style="display:none;">
     <div class="vote-section">
       <div class="vote-sub-tabs">
-        <button class="vote-sub-btn active" id="voteSubCreate" onclick="switchVoteSub('create')">发起投票</button>
-        <button class="vote-sub-btn" id="voteSubList" onclick="switchVoteSub('list')">参与投票</button>
+        <button class="vote-sub-btn" id="voteSubCreate" onclick="switchVoteSub('create')">发起投票</button>
+        <button class="vote-sub-btn active" id="voteSubList" onclick="switchVoteSub('list')">参与投票</button>
       </div>
 
-      <div class="vote-panel active" id="voteCreatePanel">
+      <div class="vote-panel" id="voteCreatePanel">
         <div class="vote-form">
           <input class="vote-input" type="text" id="voteQuestion" placeholder="输入投票问题" maxlength="100" autocomplete="off">
           <div class="vote-options-form" id="voteOptionsForm">
@@ -373,7 +373,7 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
         </div>
       </div>
 
-      <div class="vote-panel" id="voteListPanel">
+      <div class="vote-panel active" id="voteListPanel">
         <div class="vote-list" id="voteList">
           <div class="vote-empty" id="voteEmpty">暂无进行中的投票</div>
         </div>
@@ -426,7 +426,7 @@ let maxReconnectAttempts = 20;
 let reconnectTimer = null;
 let activeVotes = [];
 let myVotedIds = new Set();
-let currentVoteSub = 'create';
+let currentVoteSub = 'list';
 
 function getDeviceName() {
   const ua = navigator.userAgent;
@@ -1113,10 +1113,16 @@ function submitVote() {
     ws.send(JSON.stringify({ type: 'vote_create', vote }));
   }
 
+  const existing = activeVotes.find(v => v.id === vote.id);
+  if (!existing) {
+    activeVotes.push(vote);
+  }
+
   document.getElementById('voteQuestion').value = '';
   optionInputs.forEach(input => { input.value = ''; });
 
   switchVoteSub('list');
+  renderVoteList();
 }
 
 function castVote(voteId, optionIdx) {
