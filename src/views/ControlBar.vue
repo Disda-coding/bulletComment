@@ -2,11 +2,16 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow, PhysicalPosition } from "@tauri-apps/api/window";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 
 const isPinned = ref(false);
 const speed = ref(1.0);
 let unlisteners: UnlistenFn[] = [];
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let winStartPos: { x: number; y: number } | null = null;
 
 async function togglePin() {
   try {
@@ -25,7 +30,55 @@ async function changeSpeed(val: number) {
   }
 }
 
+async function onDragStart(e: MouseEvent | TouchEvent) {
+  const appWindow = getCurrentWindow();
+  const pos = await appWindow.position();
+  winStartPos = { x: pos.x, y: pos.y };
+
+  if (e instanceof MouseEvent) {
+    dragStartX = e.screenX;
+    dragStartY = e.screenY;
+  } else {
+    const t = e.touches[0];
+    dragStartX = t.screenX;
+    dragStartY = t.screenY;
+  }
+  isDragging = true;
+  if (e.preventDefault) e.preventDefault();
+}
+
+function onDragMove(e: MouseEvent | TouchEvent) {
+  if (!isDragging || !winStartPos) return;
+
+  let clientX: number, clientY: number;
+  if (e instanceof MouseEvent) {
+    clientX = e.screenX;
+    clientY = e.screenY;
+  } else {
+    const t = e.touches[0];
+    clientX = t.screenX;
+    clientY = t.screenY;
+  }
+
+  const dx = clientX - dragStartX;
+  const dy = clientY - dragStartY;
+  const newX = winStartPos.x + dx;
+  const newY = winStartPos.y + dy;
+
+  getCurrentWindow().setPosition(new PhysicalPosition(newX, newY)).catch(() => {});
+}
+
+function onDragEnd() {
+  isDragging = false;
+  winStartPos = null;
+}
+
 onMounted(async () => {
+  document.addEventListener("mousemove", onDragMove);
+  document.addEventListener("mouseup", onDragEnd);
+  document.addEventListener("touchmove", onDragMove, { passive: false });
+  document.addEventListener("touchend", onDragEnd);
+
   const u1 = await listen<boolean>("pin-state-changed", (event) => {
     isPinned.value = event.payload;
   });
@@ -37,11 +90,16 @@ onMounted(async () => {
 
 onUnmounted(() => {
   unlisteners.forEach((u) => u());
+  document.removeEventListener("mousemove", onDragMove);
+  document.removeEventListener("mouseup", onDragEnd);
+  document.removeEventListener("touchmove", onDragMove);
+  document.removeEventListener("touchend", onDragEnd);
 });
 </script>
 
 <template>
   <div class="control-bar">
+    <div class="drag-handle" @mousedown="onDragStart" @touchstart.prevent="onDragStart">⋮⋮</div>
     <button class="ctrl-btn pin-btn" @click="togglePin">
       {{ isPinned ? "🔓" : "📌" }}
     </button>
@@ -73,6 +131,30 @@ onUnmounted(() => {
   backdrop-filter: blur(6px);
   border-radius: 6px;
   gap: 4px;
+  cursor: default;
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 100%;
+  font-size: 10px;
+  color: rgba(148, 163, 184, 0.5);
+  letter-spacing: -1px;
+  cursor: grab;
+  user-select: none;
+  padding-right: 2px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  margin-right: 2px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+  color: rgba(148, 163, 184, 0.9);
 }
 
 .ctrl-btn {
@@ -86,6 +168,7 @@ onUnmounted(() => {
   transition: all 0.15s;
   white-space: nowrap;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .ctrl-btn:hover {
