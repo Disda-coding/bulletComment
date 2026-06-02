@@ -343,6 +343,9 @@ let isPipDragging = false;
 let pipOffset = { x: 0, y: 0 };
 let isWindowFullscreen = false;
 let viewerInited = false;
+let reconnectAttempts = 0;
+let maxReconnectAttempts = 20;
+let reconnectTimer = null;
 
 function getDeviceName() {
   const ua = navigator.userAgent;
@@ -420,6 +423,7 @@ function showView(view) {
 }
 
 function connect() {
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
   showView('connecting');
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
   const wsUrl = protocol + '//' + location.host + '/ws';
@@ -427,6 +431,7 @@ function connect() {
   ws.binaryType = 'arraybuffer';
 
   ws.onopen = () => {
+    reconnectAttempts = 0;
     statusDot.classList.add('connected');
     statusText.textContent = '已连接';
     showView('main');
@@ -434,7 +439,7 @@ function connect() {
 
   ws.onmessage = (event) => {
     if (event.data instanceof ArrayBuffer) {
-      if (!isBroadcasting) handleVideoChunk(event.data);
+      handleVideoChunk(event.data);
       return;
     }
     try {
@@ -462,16 +467,21 @@ function connect() {
   ws.onclose = () => {
     statusDot.classList.remove('connected');
     statusText.textContent = '已断开';
+    reconnectAttempts++;
+    if (reconnectAttempts >= maxReconnectAttempts) {
+      showView('error');
+      errorMsg.textContent = '连接失败次数过多，请刷新页面重试';
+      return;
+    }
+    const delay = Math.min(3000 * Math.pow(1.5, reconnectAttempts - 1), 30000);
     showView('error');
-    errorMsg.textContent = '连接已断开，3秒后重连...';
-    setTimeout(connect, 3000);
+    errorMsg.textContent = `连接已断开，${Math.round(delay / 1000)}秒后重连... (${reconnectAttempts}/${maxReconnectAttempts})`;
+    reconnectTimer = setTimeout(connect, delay);
   };
 
   ws.onerror = () => {
     statusDot.classList.remove('connected');
     statusText.textContent = '连接失败';
-    showView('error');
-    errorMsg.textContent = '无法连接到服务器，请检查地址';
   };
 }
 
