@@ -11,6 +11,7 @@ const onlineCount = ref(0);
 const localIp = ref("");
 const copied = ref(false);
 const errorMsg = ref("");
+const danmakuSpeed = ref(1.0);
 let unlisteners: UnlistenFn[] = [];
 
 async function getIp() {
@@ -51,6 +52,13 @@ async function copyAddress() {
   } catch {}
 }
 
+async function setSpeed(val: number) {
+  danmakuSpeed.value = val;
+  try {
+    await invoke("set_danmaku_speed", { speed: val });
+  } catch {}
+}
+
 onMounted(async () => {
   await getIp();
 
@@ -77,12 +85,13 @@ onUnmounted(() => {
 
 <template>
   <div class="server-view">
-    <div class="header">
-      <h1>弹幕系统</h1>
-      <p class="subtitle">课堂内网弹幕 - 教师端</p>
-    </div>
+    <div class="scroll-area">
+      <div class="header">
+        <h1>弹幕系统</h1>
+        <p class="subtitle">课堂内网弹幕 - 教师端</p>
+      </div>
 
-    <div class="card" v-if="!isRunning">
+      <div class="card" v-if="!isRunning">
       <label class="label">端口号</label>
       <input
         v-model.number="port"
@@ -118,28 +127,58 @@ onUnmounted(() => {
         </div>
       </div>
 
+      <div class="speed-section">
+        <label class="label">弹幕速度</label>
+        <div class="speed-btns">
+          <button
+            class="speed-btn"
+            :class="{ active: danmakuSpeed === 0.5 }"
+            @click="setSpeed(0.5)"
+          >慢速</button>
+          <button
+            class="speed-btn"
+            :class="{ active: danmakuSpeed === 1.0 }"
+            @click="setSpeed(1.0)"
+          >正常</button>
+          <button
+            class="speed-btn"
+            :class="{ active: danmakuSpeed === 2.0 }"
+            @click="setSpeed(2.0)"
+          >快速</button>
+        </div>
+      </div>
+
       <div class="tip">
         学生在浏览器打开上方地址即可发送弹幕
       </div>
 
-      <button class="btn btn-danger" @click="stopServer">
+      <button class="btn btn-danger btn-stop" @click="stopServer">
         停止服务器
       </button>
     </div>
 
     <p class="error" v-if="errorMsg">{{ errorMsg }}</p>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .server-view {
-  padding: 24px 20px;
+  padding: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
   background: #0f172a;
   color: #f1f5f9;
+  overflow: hidden;
+}
+
+.scroll-area {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  padding: 24px 20px 24px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .header {
@@ -310,6 +349,40 @@ onUnmounted(() => {
   font-size: 12px;
   color: #64748b;
   margin-top: 2px;
+}
+
+.speed-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.speed-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.speed-btn {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.speed-btn:hover {
+  border-color: #6366f1;
+  color: #c7d2fe;
+}
+
+.speed-btn.active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
+  color: #a5b4fc;
 }
 
 .tip {

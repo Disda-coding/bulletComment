@@ -17,172 +17,200 @@
   --success: #22c55e;
   --danger: #ef4444;
 }
-html, body {
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
-.container {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 20px 16px;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
-}
-.header {
-  text-align: center;
-  padding: 16px 0;
-}
-.header h1 {
-  font-size: 24px;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--primary-light), #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.status-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 8px;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--danger);
-  transition: background 0.3s;
-}
+html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+.container { max-width: 480px; margin: 0 auto; padding: 20px 16px; display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+.header { text-align: center; padding: 12px 0; }
+.header h1 { font-size: 24px; font-weight: 700; background: linear-gradient(135deg, var(--primary-light), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.status-bar { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; font-size: 13px; color: var(--text-muted); }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); transition: background 0.3s; }
 .status-dot.connected { background: var(--success); }
-.recent-section {
-  flex: 1;
-  min-height: 0;
-  margin: 16px 0;
-  display: flex;
-  flex-direction: column;
-}
-.recent-title {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-}
-.recent-list {
-  flex: 1;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-.recent-item {
-  padding: 8px 12px;
-  border-radius: 8px;
-  margin-bottom: 4px;
-  background: var(--card);
-  font-size: 14px;
-  animation: fadeIn 0.3s ease;
-}
-.recent-item .danmaku-text {
-  word-break: break-all;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.input-section {
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-}
-.color-picker {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-.color-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-}
+.tabs { display: flex; gap: 0; margin-bottom: 12px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+.tab-btn { flex: 1; padding: 10px 0; border: none; background: var(--card); color: var(--text-muted); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.tab-btn.active { background: var(--primary); color: white; }
+.tab-content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.recent-section { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.recent-title { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.recent-list { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.recent-item { padding: 8px 12px; border-radius: 8px; margin-bottom: 4px; background: var(--card); font-size: 14px; animation: fadeIn 0.3s ease; }
+.recent-item .danmaku-text { word-break: break-all; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+.input-section { padding-top: 12px; border-top: 1px solid var(--border); }
+.nickname-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.nickname-row input { flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 13px; outline: none; transition: border-color 0.2s; }
+.nickname-row input:focus { border-color: var(--primary); }
+.nickname-row input::placeholder { color: var(--text-muted); }
+.color-picker { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.color-btn { width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
 .color-btn:hover { transform: scale(1.15); }
-.color-btn.active {
-  border-color: white;
-  box-shadow: 0 0 0 2px var(--primary);
-}
-.input-row {
-  display: flex;
-  gap: 8px;
-}
-.input-row input {
-  flex: 1;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--text);
-  font-size: 16px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.input-row input:focus {
-  border-color: var(--primary);
-}
-.input-row input::placeholder {
-  color: var(--text-muted);
-}
-.send-btn {
-  padding: 12px 24px;
-  border-radius: 12px;
-  border: none;
-  background: var(--primary);
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
+.color-btn.active { border-color: white; box-shadow: 0 0 0 2px var(--primary); }
+.input-row { display: flex; gap: 8px; }
+.input-row input { flex: 1; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 16px; outline: none; transition: border-color 0.2s; }
+.input-row input:focus { border-color: var(--primary); }
+.input-row input::placeholder { color: var(--text-muted); }
+.send-btn { padding: 12px 24px; border-radius: 12px; border: none; background: var(--primary); color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
 .send-btn:hover { background: var(--primary-light); }
 .send-btn:active { transform: scale(0.96); }
-.send-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.error-msg {
-  text-align: center;
-  color: var(--danger);
-  font-size: 14px;
-  padding: 20px;
-}
-.connecting {
+.error-msg { text-align: center; color: var(--danger); font-size: 14px; padding: 20px; }
+.connecting { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 16px; }
+.spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.viewer-section { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.player-wrap {
+  flex: 1;
+  min-height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex: 1;
-  gap: 16px;
 }
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border);
-  border-top-color: var(--primary);
+.player-wrap video { width: 100%; height: 100%; object-fit: contain; }
+.player-placeholder { text-align: center; color: var(--text-muted); padding: 30px 20px; }
+.player-placeholder p { font-size: 14px; margin-top: 8px; }
+
+.player-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  padding: 24px 12px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.player-wrap:hover .player-overlay,
+.player-wrap.show-controls .player-overlay {
+  opacity: 1;
+}
+.player-wrap.window-fullscreen .player-overlay {
+  opacity: 1;
+}
+
+.ctrl-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.85);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+.ctrl-btn:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); color: #fff; }
+.ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.ctrl-btn.active { background: rgba(99, 102, 241, 0.4); border-color: var(--primary); color: #c7d2fe; }
+.live-indicator { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,0.7); margin-left: auto; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); animation: pulse 1.5s ease infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.player-wrap.window-fullscreen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9998 !important;
+  border-radius: 0 !important;
+  flex: none !important;
+}
+.wf-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s;
 }
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.wf-close:hover { background: rgba(239,68,68,0.6); }
+.player-wrap.window-fullscreen .wf-close { display: flex; }
+
+.broadcast-section { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.broadcast-video-wrap { flex: 1; min-height: 200px; border-radius: 12px; overflow: hidden; background: #000; position: relative; display: flex; align-items: center; justify-content: center; }
+.broadcast-video-wrap video { width: 100%; height: 100%; object-fit: contain; }
+.broadcast-placeholder { text-align: center; color: var(--text-muted); padding: 30px 20px; }
+.broadcast-placeholder p { font-size: 14px; margin-top: 8px; }
+.broadcast-controls { display: flex; gap: 8px; }
+.broadcast-btn { flex: 1; padding: 12px 0; border-radius: 12px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.broadcast-btn:active { transform: scale(0.97); }
+.broadcast-btn.start { background: var(--primary); color: white; }
+.broadcast-btn.start:hover { background: var(--primary-light); }
+.broadcast-btn.stop { background: var(--danger); color: white; }
+.broadcast-btn.stop:hover { background: #f87171; }
+.broadcast-status { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--text-muted); }
+.broadcast-hint { font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.5; }
+
+.pip-window {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  z-index: 9999;
+  display: none;
+  cursor: move;
+  touch-action: none;
+}
+.pip-window video { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.pip-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pip-resize {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+.pip-resize::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid rgba(255,255,255,0.5);
+  border-bottom: 2px solid rgba(255,255,255,0.5);
 }
 </style>
 </head>
@@ -197,17 +225,26 @@ html, body {
     </div>
   </div>
 
+  <div class="tabs">
+    <button class="tab-btn active" id="tabDanmaku" onclick="switchTab('danmaku')">弹幕</button>
+    <button class="tab-btn" id="tabWatch" onclick="switchTab('watch')">观看直播</button>
+    <button class="tab-btn" id="tabBroadcast" onclick="switchTab('broadcast')">开启直播</button>
+  </div>
+
   <div id="connectingOverlay" class="connecting">
     <div class="spinner"></div>
     <span>正在连接服务器...</span>
   </div>
 
-  <div id="mainContent" style="display:none; flex:1; flex-direction:column; min-height:0;">
+  <div id="danmakuTab" class="tab-content" style="display:none;">
     <div class="recent-section">
       <div class="recent-title">最近弹幕</div>
       <div class="recent-list" id="recentList"></div>
     </div>
     <div class="input-section">
+      <div class="nickname-row">
+        <input type="text" id="nicknameInput" placeholder="自定义名称（可选，默认用IP+设备名）" maxlength="20" autocomplete="off">
+      </div>
       <div class="color-picker" id="colorPicker"></div>
       <div class="input-row">
         <input type="text" id="danmakuInput" placeholder="输入弹幕..." maxlength="100" autocomplete="off">
@@ -216,9 +253,67 @@ html, body {
     </div>
   </div>
 
+  <div id="watchTab" class="tab-content" style="display:none;">
+    <div class="viewer-section">
+      <div class="player-wrap" id="playerWrap">
+        <div class="player-placeholder" id="viewerPlaceholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+          <p>暂无直播，等待教师开启...</p>
+        </div>
+        <video id="viewerVideo" autoplay playsinline muted style="display:none;"></video>
+        <button class="wf-close" id="wfClose" onclick="exitWindowFullscreen()">✕</button>
+        <div class="player-overlay" id="playerOverlay">
+          <button class="ctrl-btn" id="fullscreenBtn" onclick="toggleFullscreen()">⛶ 全屏</button>
+          <button class="ctrl-btn" id="winFsBtn" onclick="toggleWindowFullscreen()">⬜ 窗口全屏</button>
+          <button class="ctrl-btn" id="pipBtn" onclick="togglePip()">🖼 小窗</button>
+          <button class="ctrl-btn" id="pipNativeBtn" onclick="toggleNativePip()">📌 画中画</button>
+          <div class="live-indicator" id="liveIndicator" style="display:none;">
+            <span class="live-dot"></span>
+            <span>直播中</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="broadcastTab" class="tab-content" style="display:none;">
+    <div class="broadcast-section">
+      <div class="broadcast-video-wrap" id="broadcastWrap">
+        <div class="broadcast-placeholder" id="broadcastPlaceholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+          <p>点击下方按钮共享屏幕</p>
+        </div>
+        <video id="broadcastVideo" autoplay playsinline muted style="display:none;"></video>
+      </div>
+      <div class="broadcast-status" id="broadcastStatus" style="display:none;">
+        <span class="live-dot"></span>
+        <span>直播中</span>
+      </div>
+      <div class="broadcast-controls">
+        <button class="broadcast-btn start" id="startBroadcastBtn" onclick="startBroadcast()">开始屏幕共享</button>
+        <button class="broadcast-btn stop" id="stopBroadcastBtn" onclick="stopBroadcast()" style="display:none;">停止共享</button>
+      </div>
+      <p class="broadcast-hint">使用 Chrome 浏览器可共享屏幕、窗口或标签页</p>
+    </div>
+  </div>
+
   <div id="errorOverlay" style="display:none;" class="connecting">
     <div class="error-msg" id="errorMsg"></div>
   </div>
+</div>
+
+<div class="pip-window" id="pipWindow">
+  <video id="pipVideo" autoplay playsinline></video>
+  <button class="pip-close" onclick="closePip()">✕</button>
+  <div class="pip-resize" id="pipResize"></div>
 </div>
 
 <script>
@@ -234,6 +329,34 @@ const COLORS = [
 
 let ws = null;
 let selectedColor = COLORS[0].value;
+let broadcastStream = null;
+let mediaRecorder = null;
+let currentTab = 'danmaku';
+let isLiveActive = false;
+let isBroadcasting = false;
+let mediaSource = null;
+let sourceBuffer = null;
+let sourceBufferQueue = [];
+let isSourceBufferBusy = false;
+let isPipOpen = false;
+let isPipDragging = false;
+let pipOffset = { x: 0, y: 0 };
+let isWindowFullscreen = false;
+let viewerInited = false;
+
+function getDeviceName() {
+  const ua = navigator.userAgent;
+  if (/iPhone/i.test(ua)) return 'iPhone';
+  if (/iPad/i.test(ua)) return 'iPad';
+  if (/Android/i.test(ua)) return 'Android';
+  if (/Macintosh/i.test(ua)) return 'Mac';
+  if (/Windows/i.test(ua)) return 'Windows';
+  if (/Linux/i.test(ua)) return 'Linux';
+  return 'Unknown';
+}
+
+const deviceName = getDeviceName();
+
 const recentList = document.getElementById('recentList');
 const danmakuInput = document.getElementById('danmakuInput');
 const sendBtn = document.getElementById('sendBtn');
@@ -241,10 +364,23 @@ const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
 const onlineCount = document.getElementById('onlineCount');
 const connectingOverlay = document.getElementById('connectingOverlay');
-const mainContent = document.getElementById('mainContent');
+const danmakuTab = document.getElementById('danmakuTab');
+const watchTab = document.getElementById('watchTab');
+const broadcastTab = document.getElementById('broadcastTab');
 const errorOverlay = document.getElementById('errorOverlay');
 const errorMsg = document.getElementById('errorMsg');
 const colorPicker = document.getElementById('colorPicker');
+const viewerVideo = document.getElementById('viewerVideo');
+const viewerPlaceholder = document.getElementById('viewerPlaceholder');
+const playerWrap = document.getElementById('playerWrap');
+const liveIndicator = document.getElementById('liveIndicator');
+const broadcastVideo = document.getElementById('broadcastVideo');
+const broadcastPlaceholder = document.getElementById('broadcastPlaceholder');
+const broadcastStatus = document.getElementById('broadcastStatus');
+const startBroadcastBtn = document.getElementById('startBroadcastBtn');
+const stopBroadcastBtn = document.getElementById('stopBroadcastBtn');
+const pipWindow = document.getElementById('pipWindow');
+const pipVideo = document.getElementById('pipVideo');
 
 function initColorPicker() {
   COLORS.forEach((c, i) => {
@@ -261,12 +397,25 @@ function initColorPicker() {
   });
 }
 
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabDanmaku').classList.toggle('active', tab === 'danmaku');
+  document.getElementById('tabWatch').classList.toggle('active', tab === 'watch');
+  document.getElementById('tabBroadcast').classList.toggle('active', tab === 'broadcast');
+  danmakuTab.style.display = tab === 'danmaku' ? 'flex' : 'none';
+  watchTab.style.display = tab === 'watch' ? 'flex' : 'none';
+  broadcastTab.style.display = tab === 'broadcast' ? 'flex' : 'none';
+  if (tab === 'watch' && isLiveActive && !viewerInited) initViewer();
+}
+
 function showView(view) {
   connectingOverlay.style.display = 'none';
-  mainContent.style.display = 'none';
+  danmakuTab.style.display = 'none';
+  watchTab.style.display = 'none';
+  broadcastTab.style.display = 'none';
   errorOverlay.style.display = 'none';
   if (view === 'connecting') connectingOverlay.style.display = 'flex';
-  else if (view === 'main') mainContent.style.display = 'flex';
+  else if (view === 'main') switchTab(currentTab);
   else if (view === 'error') errorOverlay.style.display = 'flex';
 }
 
@@ -274,8 +423,8 @@ function connect() {
   showView('connecting');
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
   const wsUrl = protocol + '//' + location.host + '/ws';
-
   ws = new WebSocket(wsUrl);
+  ws.binaryType = 'arraybuffer';
 
   ws.onopen = () => {
     statusDot.classList.add('connected');
@@ -284,6 +433,10 @@ function connect() {
   };
 
   ws.onmessage = (event) => {
+    if (event.data instanceof ArrayBuffer) {
+      if (!isBroadcasting) handleVideoChunk(event.data);
+      return;
+    }
     try {
       const msg = JSON.parse(event.data);
       if (msg.type === 'danmaku') {
@@ -291,9 +444,17 @@ function connect() {
       } else if (msg.type === 'online_count') {
         onlineCount.textContent = '在线: ' + msg.count + '人';
       } else if (msg.type === 'system') {
-        if (msg.action === 'connected') {
-          statusText.textContent = '已连接';
-        }
+        if (msg.action === 'connected') statusText.textContent = '已连接';
+      } else if (msg.type === 'live_start') {
+        isLiveActive = true;
+        addRecentItem('📺 直播已开始', '#a78bfa');
+        liveIndicator.style.display = 'flex';
+        if (!viewerInited) initViewer();
+      } else if (msg.type === 'live_stop') {
+        isLiveActive = false;
+        addRecentItem('📺 直播已结束', '#94a3b8');
+        liveIndicator.style.display = 'none';
+        cleanupViewer();
       }
     } catch (e) {}
   };
@@ -323,36 +484,439 @@ function addRecentItem(text, color) {
   span.textContent = text;
   item.appendChild(span);
   recentList.insertBefore(item, recentList.firstChild);
-  while (recentList.children.length > 50) {
-    recentList.removeChild(recentList.lastChild);
-  }
+  while (recentList.children.length > 50) recentList.removeChild(recentList.lastChild);
 }
 
 function sendDanmaku() {
   const content = danmakuInput.value.trim();
   if (!content || !ws || ws.readyState !== WebSocket.OPEN) return;
-
-  const msg = JSON.stringify({
-    type: 'danmaku',
-    content: content,
-    color: selectedColor,
-    size: 24
-  });
-
-  ws.send(msg);
+  const nickname = document.getElementById('nicknameInput').value.trim();
+  ws.send(JSON.stringify({ type: 'danmaku', content, color: selectedColor, size: 24, nickname, device: deviceName }));
   danmakuInput.value = '';
   danmakuInput.focus();
 }
 
+async function startBroadcast() {
+  try {
+    broadcastStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { cursor: 'always', width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+    broadcastVideo.srcObject = broadcastStream;
+    broadcastVideo.style.display = 'block';
+    broadcastPlaceholder.style.display = 'none';
+    broadcastStatus.style.display = 'flex';
+    startBroadcastBtn.style.display = 'none';
+    stopBroadcastBtn.style.display = 'block';
+    broadcastStream.getVideoTracks()[0].onended = () => stopBroadcast();
+
+    const selectedMime = 'video/webm;codecs=vp8';
+    if (!MediaRecorder.isTypeSupported(selectedMime)) {
+      alert('浏览器不支持 vp8 编码');
+      stopBroadcast();
+      return;
+    }
+    console.log('[Broadcast] Using mime:', selectedMime);
+
+    mediaRecorder = new MediaRecorder(broadcastStream, { mimeType: selectedMime, videoBitsPerSecond: 1500000 });
+    let isFirstChunk = true;
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0 && ws && ws.readyState === WebSocket.OPEN) {
+        if (isFirstChunk) {
+          console.log('[Broadcast] First chunk size:', e.data.size);
+          isFirstChunk = false;
+        }
+        e.data.arrayBuffer().then(buf => ws.send(buf));
+      }
+    };
+    mediaRecorder.start(200);
+    isBroadcasting = true;
+    console.log('[Broadcast] MediaRecorder started');
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'live_start', content: '有人开始直播了' }));
+    }
+  } catch (e) {
+    console.error('Screen share failed:', e);
+  }
+}
+
+function stopBroadcast() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); mediaRecorder = null; }
+  if (broadcastStream) { broadcastStream.getTracks().forEach(t => t.stop()); broadcastStream = null; }
+  broadcastVideo.srcObject = null;
+  broadcastVideo.style.display = 'none';
+  broadcastPlaceholder.style.display = 'block';
+  broadcastStatus.style.display = 'none';
+  startBroadcastBtn.style.display = 'block';
+  stopBroadcastBtn.style.display = 'none';
+  isBroadcasting = false;
+
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'live_stop', content: '直播已结束' }));
+  }
+}
+
+function initViewer() {
+  if (viewerInited) return;
+  if (!window.MediaSource) { viewerPlaceholder.innerHTML = '<p>浏览器不支持播放直播流</p>'; return; }
+
+  const codec = 'video/webm;codecs=vp8';
+  if (!MediaSource.isTypeSupported(codec)) {
+    console.error('[Viewer] Codec not supported:', codec);
+    viewerPlaceholder.innerHTML = '<p>浏览器不支持 vp8 编码</p>';
+    return;
+  }
+  console.log('[Viewer] Init with codec:', codec);
+
+  viewerInited = true;
+  mediaSource = new MediaSource();
+  viewerVideo.src = URL.createObjectURL(mediaSource);
+  viewerVideo.style.display = 'block';
+  viewerPlaceholder.style.display = 'none';
+
+  viewerVideo.addEventListener('loadeddata', () => {
+    console.log('[Viewer] Video loadeddata, readyState:', viewerVideo.readyState);
+    viewerVideo.play().catch(e => console.log('[Viewer] play() error:', e.message));
+  });
+  viewerVideo.addEventListener('canplay', () => {
+    console.log('[Viewer] Video canplay');
+    viewerVideo.play().catch(() => {});
+  });
+  viewerVideo.addEventListener('playing', () => {
+    console.log('[Viewer] Video playing!');
+  });
+  viewerVideo.addEventListener('error', (e) => {
+    console.error('[Viewer] Video error:', e);
+  });
+
+  mediaSource.addEventListener('sourceopen', function onSourceOpen() {
+    console.log('[Viewer] MediaSource sourceopen, readyState:', mediaSource.readyState);
+    mediaSource.removeEventListener('sourceopen', onSourceOpen);
+    try {
+      sourceBuffer = mediaSource.addSourceBuffer(codec);
+      sourceBuffer.mode = 'sequence';
+      console.log('[Viewer] SourceBuffer created, mode: sequence');
+      sourceBuffer.addEventListener('updateend', onBufferUpdateEnd);
+      sourceBuffer.addEventListener('error', (e) => {
+        console.error('[Viewer] SourceBuffer error:', e);
+        resetViewer();
+      });
+      if (sourceBufferQueue.length > 0 && !isSourceBufferBusy) {
+        console.log('[Viewer] Processing queued chunks:', sourceBufferQueue.length);
+        appendNext();
+      }
+    } catch (e) {
+      console.error('[Viewer] addSourceBuffer error:', e);
+      resetViewer();
+    }
+  });
+
+  mediaSource.addEventListener('sourceended', () => {
+    console.log('[Viewer] MediaSource ended');
+  });
+}
+
+function onBufferUpdateEnd() {
+  isSourceBufferBusy = false;
+  pruneBuffer();
+  if (sourceBuffer && sourceBuffer.buffered.length > 0) {
+    console.log('[Viewer] Buffered range:', sourceBuffer.buffered.start(0).toFixed(2), '-', sourceBuffer.buffered.end(sourceBuffer.buffered.length - 1).toFixed(2));
+  }
+  if (sourceBufferQueue.length > 0) {
+    appendNext();
+  } else if (viewerVideo.paused && sourceBuffer && sourceBuffer.buffered.length > 0) {
+    viewerVideo.play().catch(e => console.log('[Viewer] play after updateend error:', e.message));
+  }
+}
+
+function handleVideoChunk(data) {
+  const chunk = new Uint8Array(data);
+  console.log('[Viewer] Received chunk, size:', chunk.length, 'queue before:', sourceBufferQueue.length);
+
+  sourceBufferQueue.push(chunk);
+  if (sourceBufferQueue.length > 300) {
+    sourceBufferQueue.splice(0, sourceBufferQueue.length - 300);
+  }
+
+  if (!sourceBuffer || !mediaSource || mediaSource.readyState !== 'open') {
+    if (!viewerInited && isLiveActive) {
+      console.log('[Viewer] MediaSource not ready yet, initializing...');
+      initViewer();
+    }
+    return;
+  }
+
+  if (!isSourceBufferBusy) {
+    appendNext();
+  }
+}
+
+function appendNext() {
+  if (isSourceBufferBusy || sourceBufferQueue.length === 0 || !sourceBuffer) return;
+  if (sourceBuffer.updating) return;
+  if (mediaSource.readyState !== 'open') return;
+
+  const chunk = sourceBufferQueue.shift();
+  isSourceBufferBusy = true;
+
+  try {
+    sourceBuffer.appendBuffer(chunk);
+    console.log('[Viewer] Appended buffer, size:', chunk.length, 'remaining queue:', sourceBufferQueue.length);
+  } catch (e) {
+    console.error('[Viewer] appendBuffer error:', e, 'chunk size:', chunk.length);
+    isSourceBufferBusy = false;
+    if (sourceBufferQueue.length > 0) {
+      setTimeout(() => appendNext(), 50);
+    }
+  }
+}
+
+function pruneBuffer() {
+  if (!sourceBuffer || !mediaSource || mediaSource.readyState !== 'open') return;
+  if (sourceBuffer.updating) return;
+  try {
+    const buffered = sourceBuffer.buffered;
+    if (buffered.length > 0) {
+      const end = buffered.end(buffered.length - 1);
+      const start = buffered.start(0);
+      if (end - start > 30) {
+        sourceBuffer.remove(start, end - 20);
+      }
+    }
+  } catch (e) {}
+}
+
+function resetViewer() {
+  console.log('[Viewer] Resetting viewer...');
+  sourceBufferQueue = [];
+  isSourceBufferBusy = false;
+  if (sourceBuffer) {
+    try { if (mediaSource && mediaSource.readyState === 'open') mediaSource.removeSourceBuffer(sourceBuffer); } catch(e) {}
+    sourceBuffer = null;
+  }
+  if (mediaSource) {
+    try { if (mediaSource.readyState === 'open') mediaSource.endOfStream(); } catch(e) {}
+    URL.revokeObjectURL(viewerVideo.src);
+    mediaSource = null;
+  }
+  viewerVideo.src = '';
+  viewerVideo.style.display = 'none';
+  viewerPlaceholder.style.display = 'block';
+  viewerInited = false;
+  if (isLiveActive) {
+    console.log('[Viewer] Live still active, will re-init in 500ms');
+    setTimeout(() => { if (isLiveActive && !viewerInited) initViewer(); }, 500);
+  }
+}
+
+function cleanupViewer() {
+  console.log('[Viewer] Cleaning up viewer');
+  closePip();
+  exitWindowFullscreen();
+  sourceBufferQueue = [];
+  isSourceBufferBusy = false;
+  if (sourceBuffer) {
+    try { if (mediaSource && mediaSource.readyState === 'open') mediaSource.removeSourceBuffer(sourceBuffer); } catch(e) {}
+    sourceBuffer = null;
+  }
+  if (mediaSource) {
+    try { if (mediaSource.readyState === 'open') mediaSource.endOfStream(); } catch(e) {}
+    URL.revokeObjectURL(viewerVideo.src);
+    mediaSource = null;
+  }
+  viewerVideo.src = '';
+  viewerVideo.style.display = 'none';
+  viewerPlaceholder.style.display = 'block';
+  viewerPlaceholder.innerHTML = '<p>暂无直播，等待教师开启...</p>';
+  viewerInited = false;
+}
+
+function toggleFullscreen() {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    playerWrap.requestFullscreen().catch(e => console.error('Fullscreen failed:', e));
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('fullscreenBtn');
+  btn.textContent = document.fullscreenElement ? '⛶ 退出全屏' : '⛶ 全屏';
+});
+
+function toggleWindowFullscreen() {
+  if (isWindowFullscreen) {
+    exitWindowFullscreen();
+  } else {
+    isWindowFullscreen = true;
+    playerWrap.classList.add('window-fullscreen');
+    document.getElementById('winFsBtn').textContent = '⬜ 退出窗全';
+  }
+}
+
+function exitWindowFullscreen() {
+  if (!isWindowFullscreen) return;
+  isWindowFullscreen = false;
+  playerWrap.classList.remove('window-fullscreen');
+  document.getElementById('winFsBtn').textContent = '⬜ 窗口全屏';
+}
+
+function togglePip() {
+  if (isPipOpen) {
+    closePip();
+  } else {
+    openPip();
+  }
+}
+
+function openPip() {
+  if (!isLiveActive || !viewerVideo.src) return;
+  isPipOpen = true;
+  pipWindow.style.display = 'block';
+  try {
+    const stream = viewerVideo.captureStream ? viewerVideo.captureStream() : viewerVideo.mozCaptureStream;
+    pipVideo.srcObject = typeof stream === 'function' ? stream() : stream;
+  } catch (e) {
+    console.error('captureStream failed:', e);
+    pipVideo.src = viewerVideo.src;
+  }
+  pipVideo.play().catch(() => {});
+  document.getElementById('pipBtn').classList.add('active');
+}
+
+function closePip() {
+  isPipOpen = false;
+  pipWindow.style.display = 'none';
+  pipVideo.srcObject = null;
+  pipVideo.src = '';
+  document.getElementById('pipBtn').classList.remove('active');
+}
+
+function initPipDrag() {
+  let startX, startY, startLeft, startTop;
+
+  function onDragStart(clientX, clientY) {
+    isPipDragging = true;
+    startX = clientX;
+    startY = clientY;
+    startLeft = pipWindow.offsetLeft;
+    startTop = pipWindow.offsetTop;
+  }
+
+  function onDragMove(clientX, clientY) {
+    if (!isPipDragging) return;
+    const dx = clientX - startX;
+    const dy = clientY - startY;
+    pipWindow.style.left = (startLeft + dx) + 'px';
+    pipWindow.style.top = (startTop + dy) + 'px';
+    pipWindow.style.right = 'auto';
+    pipWindow.style.bottom = 'auto';
+  }
+
+  function onDragEnd() {
+    isPipDragging = false;
+  }
+
+  pipWindow.addEventListener('mousedown', (e) => {
+    if (e.target === pipWindow || e.target === pipVideo) {
+      onDragStart(e.clientX, e.clientY);
+      e.preventDefault();
+    }
+  });
+  document.addEventListener('mousemove', (e) => onDragMove(e.clientX, e.clientY));
+  document.addEventListener('mouseup', onDragEnd);
+
+  pipWindow.addEventListener('touchstart', (e) => {
+    if (e.target === pipWindow || e.target === pipVideo) {
+      const t = e.touches[0];
+      onDragStart(t.clientX, t.clientY);
+      e.preventDefault();
+    }
+  }, { passive: false });
+  document.addEventListener('touchmove', (e) => {
+    if (!isPipDragging) return;
+    const t = e.touches[0];
+    onDragMove(t.clientX, t.clientY);
+  }, { passive: false });
+  document.addEventListener('touchend', onDragEnd);
+
+  const pipResize = document.getElementById('pipResize');
+  let isResizing = false;
+  let resizeStartX, resizeStartY, startW, startH;
+
+  pipResize.addEventListener('mousedown', (e) => {
+    isResizing = true;
+    resizeStartX = e.clientX;
+    resizeStartY = e.clientY;
+    startW = pipWindow.offsetWidth;
+    startH = pipWindow.offsetHeight;
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isResizing) return;
+    const newW = Math.max(200, startW + (e.clientX - resizeStartX));
+    const newH = Math.max(120, startH + (e.clientY - resizeStartY));
+    pipWindow.style.width = newW + 'px';
+    pipWindow.style.height = newH + 'px';
+  });
+
+  document.addEventListener('mouseup', () => { isResizing = false; });
+
+  pipResize.addEventListener('touchstart', (e) => {
+    isResizing = true;
+    const t = e.touches[0];
+    resizeStartX = t.clientX;
+    resizeStartY = t.clientY;
+    startW = pipWindow.offsetWidth;
+    startH = pipWindow.offsetHeight;
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive: false });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!isResizing) return;
+    const t = e.touches[0];
+    const newW = Math.max(200, startW + (t.clientX - resizeStartX));
+    const newH = Math.max(120, startH + (t.clientY - resizeStartY));
+    pipWindow.style.width = newW + 'px';
+    pipWindow.style.height = newH + 'px';
+  }, { passive: false });
+
+  document.addEventListener('touchend', () => { isResizing = false; });
+}
+
+async function toggleNativePip() {
+  try {
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture();
+      document.getElementById('pipNativeBtn').classList.remove('active');
+    } else if (viewerVideo.readyState >= 1) {
+      await viewerVideo.requestPictureInPicture();
+      document.getElementById('pipNativeBtn').classList.add('active');
+    }
+  } catch (e) {
+    console.error('PiP failed:', e);
+  }
+}
+
+viewerVideo && viewerVideo.addEventListener('leavepictureinpicture', () => {
+  document.getElementById('pipNativeBtn').classList.remove('active');
+});
+
+playerWrap.addEventListener('touchstart', () => {
+  playerWrap.classList.toggle('show-controls');
+}, { passive: true });
+
 sendBtn.onclick = sendDanmaku;
 danmakuInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    sendDanmaku();
-  }
+  if (e.key === 'Enter') { e.preventDefault(); sendDanmaku(); }
 });
 
 initColorPicker();
+initPipDrag();
 connect();
 </script>
 </body>

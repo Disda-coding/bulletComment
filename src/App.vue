@@ -1,15 +1,27 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import ServerView from "./views/ServerView.vue";
 import DanmakuOverlay from "./views/DanmakuOverlay.vue";
+import ControlBar from "./views/ControlBar.vue";
 
-const route = computed(() => {
-  return window.location.hash.slice(1) || "/server";
+const currentRoute = ref(window.location.hash.slice(1) || "/server");
+
+function onHashChange() {
+  currentRoute.value = window.location.hash.slice(1) || "/server";
+}
+
+onMounted(() => {
+  window.addEventListener("hashchange", onHashChange);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("hashchange", onHashChange);
 });
 </script>
 
 <template>
-  <DanmakuOverlay v-if="route === '/danmaku'" />
+  <DanmakuOverlay v-if="currentRoute === '/danmaku'" />
+  <ControlBar v-else-if="currentRoute === '/control-bar'" />
   <ServerView v-else />
 </template>
 
