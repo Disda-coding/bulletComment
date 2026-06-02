@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
 import { listen } from "@tauri-apps/api/event";
-import { invoke } from "@tauri-apps/api/core";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import type { DanmakuMessage } from "../types";
 
@@ -21,6 +20,7 @@ const trackLastTime: number[] = [];
 const TRACK_COUNT = 10;
 const DEFAULT_DURATION = 8000;
 const currentSpeed = ref(1.0);
+const MAX_DANMAKU = 200;
 
 function getAvailableTrack(): number {
   const now = Date.now();
@@ -35,10 +35,21 @@ function getAvailableTrack(): number {
   return track;
 }
 
+function removeDanmaku(id: number) {
+  const idx = danmakuList.value.findIndex((d) => d.id === id);
+  if (idx !== -1) {
+    danmakuList.value.splice(idx, 1);
+  }
+}
+
 function addDanmaku(raw: string) {
   try {
     const msg: DanmakuMessage = JSON.parse(raw);
     if (msg.type !== "danmaku") return;
+
+    while (danmakuList.value.length >= MAX_DANMAKU) {
+      danmakuList.value.shift();
+    }
 
     const track = getAvailableTrack();
     const duration = DEFAULT_DURATION / currentSpeed.value;
@@ -53,10 +64,17 @@ function addDanmaku(raw: string) {
     danmakuList.value.push(item);
 
     setTimeout(() => {
-      danmakuList.value = danmakuList.value.filter((d) => d.id !== item.id);
-    }, duration + 500);
+      removeDanmaku(item.id);
+    }, duration + 100);
   } catch (e) {
     console.error("Failed to parse danmaku:", e);
+  }
+}
+
+function onDanmakuEnd(e: Event) {
+  const target = e.target as HTMLElement;
+  if (target && target.dataset.id) {
+    removeDanmaku(parseInt(target.dataset.id));
   }
 }
 
@@ -73,15 +91,17 @@ onMounted(async () => {
 
 onUnmounted(() => {
   unlisteners.forEach((u) => u());
+  danmakuList.value = [];
 });
 </script>
 
 <template>
   <div class="danmaku-overlay">
-    <div class="danmaku-container">
+    <div class="danmaku-container" @animationend="onDanmakuEnd">
       <div
         v-for="item in danmakuList"
         :key="item.id"
+        :data-id="item.id"
         class="danmaku-item"
         :style="{
           color: item.color,
@@ -125,15 +145,20 @@ onUnmounted(() => {
     0 0 8px rgba(0, 0, 0, 0.6);
   font-weight: 600;
   pointer-events: none;
-  will-change: transform;
+  opacity: 1;
 }
 
 @keyframes danmaku-scroll {
-  from {
+  0% {
     transform: translateX(100%);
+    opacity: 1;
   }
-  to {
+  95% {
+    opacity: 1;
+  }
+  100% {
     transform: translateX(calc(-100vw - 100%));
+    opacity: 0;
   }
 }
 </style>

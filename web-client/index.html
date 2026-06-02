@@ -212,6 +212,48 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
   border-right: 2px solid rgba(255,255,255,0.5);
   border-bottom: 2px solid rgba(255,255,255,0.5);
 }
+
+.vote-section { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.vote-sub-tabs { display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+.vote-sub-btn { flex: 1; padding: 8px 0; border: none; background: var(--card); color: var(--text-muted); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.vote-sub-btn.active { background: var(--primary); color: white; }
+.vote-panel { display: none; flex: 1; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; }
+.vote-panel.active { display: flex; }
+.vote-form { display: flex; flex-direction: column; gap: 10px; }
+.vote-input { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s; }
+.vote-input:focus { border-color: var(--primary); }
+.vote-input::placeholder { color: var(--text-muted); }
+.vote-options-form { display: flex; flex-direction: column; gap: 8px; }
+.vote-option-row { display: flex; gap: 6px; align-items: center; }
+.vote-option-row .vote-input { flex: 1; }
+.vote-remove-opt { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--danger); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+.vote-remove-opt:hover { background: rgba(239,68,68,0.15); }
+.vote-add-opt { padding: 8px 0; border-radius: 8px; border: 1px dashed var(--border); background: transparent; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.vote-add-opt:hover { border-color: var(--primary); color: var(--primary); }
+.vote-submit-btn { padding: 12px 0; border-radius: 12px; border: none; background: var(--primary); color: white; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.vote-submit-btn:hover { background: var(--primary-light); }
+.vote-submit-btn:active { transform: scale(0.97); }
+.vote-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.vote-list { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; overflow-y: auto; }
+.vote-card { background: var(--card); border-radius: 12px; padding: 14px; border: 1px solid var(--border); }
+.vote-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.vote-card-question { font-size: 15px; font-weight: 600; flex: 1; }
+.vote-card-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.vote-card-badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; flex-shrink: 0; margin-left: 8px; }
+.vote-card-badge.active { background: rgba(34,197,94,0.15); color: var(--success); }
+.vote-card-badge.closed { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+.vote-option-item { margin-bottom: 8px; }
+.vote-option-item:last-child { margin-bottom: 0; }
+.vote-option-btn { width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.03); cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+.vote-option-btn:hover:not(.voted):not(.disabled) { border-color: var(--primary); background: rgba(99,102,241,0.08); }
+.vote-option-btn.voted { border-color: var(--primary); background: rgba(99,102,241,0.12); }
+.vote-option-btn.disabled { cursor: default; opacity: 0.8; }
+.vote-progress { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(99,102,241,0.12); border-radius: 8px; transition: width 0.4s ease; pointer-events: none; }
+.vote-option-label { font-size: 14px; z-index: 1; flex: 1; }
+.vote-option-count { font-size: 12px; color: var(--text-muted); z-index: 1; white-space: nowrap; }
+.vote-close-btn { margin-top: 10px; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--danger); background: transparent; color: var(--danger); font-size: 12px; cursor: pointer; transition: all 0.2s; }
+.vote-close-btn:hover { background: rgba(239,68,68,0.15); }
+.vote-empty { text-align: center; color: var(--text-muted); padding: 40px 20px; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -229,6 +271,7 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
     <button class="tab-btn active" id="tabDanmaku" onclick="switchTab('danmaku')">弹幕</button>
     <button class="tab-btn" id="tabWatch" onclick="switchTab('watch')">观看直播</button>
     <button class="tab-btn" id="tabBroadcast" onclick="switchTab('broadcast')">开启直播</button>
+    <button class="tab-btn" id="tabVote" onclick="switchTab('vote')">投票</button>
   </div>
 
   <div id="connectingOverlay" class="connecting">
@@ -305,6 +348,39 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
     </div>
   </div>
 
+  <div id="voteTab" class="tab-content" style="display:none;">
+    <div class="vote-section">
+      <div class="vote-sub-tabs">
+        <button class="vote-sub-btn active" id="voteSubCreate" onclick="switchVoteSub('create')">发起投票</button>
+        <button class="vote-sub-btn" id="voteSubList" onclick="switchVoteSub('list')">参与投票</button>
+      </div>
+
+      <div class="vote-panel active" id="voteCreatePanel">
+        <div class="vote-form">
+          <input class="vote-input" type="text" id="voteQuestion" placeholder="输入投票问题" maxlength="100" autocomplete="off">
+          <div class="vote-options-form" id="voteOptionsForm">
+            <div class="vote-option-row">
+              <input class="vote-input" type="text" placeholder="选项 1" maxlength="50" autocomplete="off">
+              <button class="vote-remove-opt" onclick="removeVoteOption(this)" title="移除">✕</button>
+            </div>
+            <div class="vote-option-row">
+              <input class="vote-input" type="text" placeholder="选项 2" maxlength="50" autocomplete="off">
+              <button class="vote-remove-opt" onclick="removeVoteOption(this)" title="移除">✕</button>
+            </div>
+          </div>
+          <button class="vote-add-opt" onclick="addVoteOption()">+ 添加选项</button>
+          <button class="vote-submit-btn" id="voteSubmitBtn" onclick="submitVote()">发起投票</button>
+        </div>
+      </div>
+
+      <div class="vote-panel" id="voteListPanel">
+        <div class="vote-list" id="voteList">
+          <div class="vote-empty" id="voteEmpty">暂无进行中的投票</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="errorOverlay" style="display:none;" class="connecting">
     <div class="error-msg" id="errorMsg"></div>
   </div>
@@ -348,6 +424,9 @@ const MAX_VIEWER_RESETS = 5;
 let reconnectAttempts = 0;
 let maxReconnectAttempts = 20;
 let reconnectTimer = null;
+let activeVotes = [];
+let myVotedIds = new Set();
+let currentVoteSub = 'create';
 
 function getDeviceName() {
   const ua = navigator.userAgent;
@@ -386,6 +465,8 @@ const startBroadcastBtn = document.getElementById('startBroadcastBtn');
 const stopBroadcastBtn = document.getElementById('stopBroadcastBtn');
 const pipWindow = document.getElementById('pipWindow');
 const pipVideo = document.getElementById('pipVideo');
+const voteTab = document.getElementById('voteTab');
+const voteList = document.getElementById('voteList');
 
 function initColorPicker() {
   COLORS.forEach((c, i) => {
@@ -407,9 +488,11 @@ function switchTab(tab) {
   document.getElementById('tabDanmaku').classList.toggle('active', tab === 'danmaku');
   document.getElementById('tabWatch').classList.toggle('active', tab === 'watch');
   document.getElementById('tabBroadcast').classList.toggle('active', tab === 'broadcast');
+  document.getElementById('tabVote').classList.toggle('active', tab === 'vote');
   danmakuTab.style.display = tab === 'danmaku' ? 'flex' : 'none';
   watchTab.style.display = tab === 'watch' ? 'flex' : 'none';
   broadcastTab.style.display = tab === 'broadcast' ? 'flex' : 'none';
+  voteTab.style.display = tab === 'vote' ? 'flex' : 'none';
   if (tab === 'watch' && isLiveActive && !viewerInited) initViewer();
 }
 
@@ -418,6 +501,7 @@ function showView(view) {
   danmakuTab.style.display = 'none';
   watchTab.style.display = 'none';
   broadcastTab.style.display = 'none';
+  voteTab.style.display = 'none';
   errorOverlay.style.display = 'none';
   if (view === 'connecting') connectingOverlay.style.display = 'flex';
   else if (view === 'main') switchTab(currentTab);
@@ -451,7 +535,10 @@ function connect() {
       } else if (msg.type === 'online_count') {
         onlineCount.textContent = '在线: ' + msg.count + '人';
       } else if (msg.type === 'system') {
-        if (msg.action === 'connected') statusText.textContent = '已连接';
+        if (msg.action === 'connected') {
+          statusText.textContent = '已连接';
+          if (msg.ip) clientIp = msg.ip;
+        }
       } else if (msg.type === 'live_start') {
         isLiveActive = true;
         addRecentItem('📺 直播已开始', '#a78bfa');
@@ -462,6 +549,24 @@ function connect() {
         addRecentItem('📺 直播已结束', '#94a3b8');
         liveIndicator.style.display = 'none';
         cleanupViewer();
+      } else if (msg.type === 'vote_create') {
+        if (msg.vote) {
+          const existing = activeVotes.find(v => v.id === msg.vote.id);
+          if (!existing) {
+            activeVotes.push(msg.vote);
+            renderVoteList();
+          }
+        }
+      } else if (msg.type === 'vote_update') {
+        if (msg.vote) {
+          const idx = activeVotes.findIndex(v => v.id === msg.vote.id);
+          if (idx !== -1) {
+            activeVotes[idx] = msg.vote;
+          } else {
+            activeVotes.push(msg.vote);
+          }
+          renderVoteList();
+        }
       }
     } catch (e) {}
   };
@@ -954,6 +1059,134 @@ danmakuInput.addEventListener('keydown', (e) => {
 
 initColorPicker();
 initPipDrag();
+
+function switchVoteSub(sub) {
+  currentVoteSub = sub;
+  document.getElementById('voteSubCreate').classList.toggle('active', sub === 'create');
+  document.getElementById('voteSubList').classList.toggle('active', sub === 'list');
+  document.getElementById('voteCreatePanel').classList.toggle('active', sub === 'create');
+  document.getElementById('voteListPanel').classList.toggle('active', sub === 'list');
+}
+
+function addVoteOption() {
+  const form = document.getElementById('voteOptionsForm');
+  const count = form.children.length + 1;
+  const row = document.createElement('div');
+  row.className = 'vote-option-row';
+  row.innerHTML = '<input class="vote-input" type="text" placeholder="选项 ' + count + '" maxlength="50" autocomplete="off"><button class="vote-remove-opt" onclick="removeVoteOption(this)" title="移除">✕</button>';
+  form.appendChild(row);
+}
+
+function removeVoteOption(btn) {
+  const form = document.getElementById('voteOptionsForm');
+  if (form.children.length <= 2) return;
+  btn.parentElement.remove();
+}
+
+function submitVote() {
+  const question = document.getElementById('voteQuestion').value.trim();
+  if (!question) { alert('请输入投票问题'); return; }
+
+  const optionInputs = document.querySelectorAll('#voteOptionsForm .vote-input');
+  const options = [];
+  optionInputs.forEach(input => {
+    const val = input.value.trim();
+    if (val) options.push(val);
+  });
+  if (options.length < 2) { alert('至少需要2个选项'); return; }
+
+  const nickname = document.getElementById('nicknameInput').value.trim();
+  const voter = nickname || (clientIp || deviceName);
+
+  const voteId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+  const vote = {
+    id: voteId,
+    question: question,
+    options: options.map(label => ({ label, count: 0 })),
+    voters: {},
+    created_by: voter,
+    created_at: new Date().toLocaleString('zh-CN'),
+    closed: false,
+  };
+
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'vote_create', vote }));
+  }
+
+  document.getElementById('voteQuestion').value = '';
+  optionInputs.forEach(input => { input.value = ''; });
+
+  switchVoteSub('list');
+}
+
+function castVote(voteId, optionIdx) {
+  const nickname = document.getElementById('nicknameInput').value.trim();
+  const voter = nickname || (clientIp || deviceName);
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'vote_cast', vote_id: voteId, option_idx: optionIdx, voter }));
+    myVotedIds.add(voteId);
+  }
+}
+
+function closeVote(voteId) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'vote_close', vote_id: voteId }));
+  }
+}
+
+function renderVoteList() {
+  const emptyEl = document.getElementById('voteEmpty');
+  if (activeVotes.length === 0) {
+    voteList.innerHTML = '<div class="vote-empty" id="voteEmpty">暂无进行中的投票</div>';
+    return;
+  }
+
+  let html = '';
+  activeVotes.forEach(vote => {
+    const totalVotes = vote.options.reduce((sum, o) => sum + o.count, 0);
+    const hasVoted = myVotedIds.has(vote.id) || (vote.voters && Object.keys(vote.voters).length > 0 && vote.voters[clientIp || ''] !== undefined) || (vote.voters && vote.voters[nickname || ''] !== undefined);
+    const nickname = document.getElementById('nicknameInput').value.trim();
+    const voterKey = nickname || clientIp || '';
+    const iVoted = vote.voters && vote.voters[voterKey] !== undefined;
+
+    html += '<div class="vote-card">';
+    html += '<div class="vote-card-header">';
+    html += '<div><div class="vote-card-question">' + escapeHtml(vote.question) + '</div>';
+    html += '<div class="vote-card-meta">' + escapeHtml(vote.created_by) + ' · ' + escapeHtml(vote.created_at) + ' · ' + totalVotes + '票</div></div>';
+    html += '<span class="vote-card-badge ' + (vote.closed ? 'closed' : 'active') + '">' + (vote.closed ? '已结束' : '进行中') + '</span>';
+    html += '</div>';
+
+    vote.options.forEach((opt, idx) => {
+      const pct = totalVotes > 0 ? Math.round(opt.count / totalVotes * 100) : 0;
+      const isMyVote = iVoted && vote.voters[voterKey] === idx;
+      const canVote = !vote.closed && !iVoted;
+      html += '<div class="vote-option-item">';
+      html += '<button class="vote-option-btn' + (isMyVote ? ' voted' : '') + (!canVote ? ' disabled' : '') + '"'
+        + (canVote ? ' onclick="castVote(\'' + vote.id + '\',' + idx + ')"' : '') + '>';
+      html += '<div class="vote-progress" style="width:' + pct + '%"></div>';
+      html += '<span class="vote-option-label">' + escapeHtml(opt.label) + (isMyVote ? ' ✓' : '') + '</span>';
+      html += '<span class="vote-option-count">' + opt.count + '票 (' + pct + '%)</span>';
+      html += '</button></div>';
+    });
+
+    if (!vote.closed) {
+      html += '<button class="vote-close-btn" onclick="closeVote(\'' + vote.id + '\')">结束投票</button>';
+    }
+
+    html += '</div>';
+  });
+
+  voteList.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+let clientIp = '';
+
 connect();
 </script>
 </body>

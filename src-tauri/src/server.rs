@@ -11,6 +11,7 @@ use chrono::Local;
 use futures_util::{SinkExt, StreamExt};
 use rcgen::{CertificateParams, DnType, KeyPair};
 use rust_embed::Embed;
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::{
     atomic::{AtomicBool, AtomicUsize, Ordering},
@@ -27,6 +28,23 @@ const MAX_HISTORY: usize = 100;
 #[folder = "../web-client/"]
 struct WebClientAssets;
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct VoteOption {
+    pub label: String,
+    pub count: usize,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Vote {
+    pub id: String,
+    pub question: String,
+    pub options: Vec<VoteOption>,
+    pub voters: HashMap<String, usize>,
+    pub created_by: String,
+    pub created_at: String,
+    pub closed: bool,
+}
+
 #[derive(Clone)]
 pub struct AppState {
     pub tx: broadcast::Sender<String>,
@@ -37,6 +55,7 @@ pub struct AppState {
     pub init_segment: Arc<Mutex<Option<Vec<u8>>>>,
     pub danmaku_log: Arc<StdMutex<Vec<String>>>,
     pub danmaku_history: Arc<StdMutex<Vec<String>>>,
+    pub active_votes: Arc<StdMutex<Vec<Vote>>>,
 }
 
 fn generate_self_signed_cert() -> Result<(String, String), String> {
@@ -89,6 +108,7 @@ pub async fn start_server(
     let live_active = Arc::new(AtomicBool::new(false));
     let init_segment = Arc::new(Mutex::new(None::<Vec<u8>>));
     let danmaku_history = Arc::new(StdMutex::new(Vec::new()));
+    let active_votes = Arc::new(StdMutex::new(Vec::new()));
 
     let state = AppState {
         tx,
@@ -99,6 +119,7 @@ pub async fn start_server(
         init_segment,
         danmaku_log: danmaku_log.clone(),
         danmaku_history,
+        active_votes,
     };
 
     let app = Router::new()
@@ -165,7 +186,8 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
     init_msgs.push(serde_json::json!({
         "type": "system",
         "action": "connected",
-        "content": "已连接到弹幕服务器"
+        "content": "已连接到弹幕服务器",
+        "ip": client_ip
     }).to_string());
 
     if state.live_active.load(Ordering::Relaxed) {
@@ -179,6 +201,16 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
         let history = state.danmaku_history.lock().unwrap();
         for msg in history.iter() {
             init_msgs.push(msg.clone());
+        }
+    }
+
+    {
+        let votes = state.active_votes.lock().unwrap();
+        for vote in votes.iter() {
+            init_msgs.push(serde_json::json!({
+                "type": "vote_create",
+                "vote": vote
+            }).to_string());
         }
     }
 
@@ -219,7 +251,9 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
             match msg {
                 Message::Text(text) => {
                     if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&text) {
-                        if parsed["type"] == "danmaku" {
+                        let msg_type = parsed["type"].as_str().unwrap_or("");
+
+                        if msg_type == "danmaku" {
                             let content = parsed["content"].as_str().unwrap_or("");
                             let nickname = parsed["nickname"].as_str().unwrap_or("");
                             let device = parsed["device"].as_str().unwrap_or("");
@@ -242,12 +276,44 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
                                     history.remove(0);
                                 }
                             }
+                        } else if msg_type == "vote_create" {
+                            if let Ok(vote_data) = serde_json::from_value::<Vote>(parsed["vote"].clone()) {
+                                if let Ok(mut votes) = state_recv.active_votes.lock() {
+                                    votes.push(vote_data);
+                                }
+                            }
+                        } else if msg_type == "vote_cast" {
+                            let vote_id = parsed["vote_id"].as_str().unwrap_or("");
+                            let option_idx = parsed["option_idx"].as_u64().map(|v| v as usize);
+                            let voter = parsed["voter"].as_str().unwrap_or(&ip_for_log);
+                            if let (Some(idx), Ok(mut votes)) = (option_idx, state_recv.active_votes.lock()) {
+                                if let Some(vote) = votes.iter_mut().find(|v| v.id == vote_id) {
+                                    if !vote.closed && !vote.voters.contains_key(voter) && idx < vote.options.len() {
+                                        vote.voters.insert(voter.to_string(), idx);
+                                        vote.options[idx].count += 1;
+                                        let updated = serde_json::json!({
+                                            "type": "vote_update",
+                                            "vote": vote
+                                        }).to_string();
+                                        let _ = state_recv.tx.send(updated);
+                                    }
+                                }
+                            }
+                            continue;
+                        } else if msg_type == "vote_close" {
+                            let vote_id = parsed["vote_id"].as_str().unwrap_or("");
+                            if let Ok(mut votes) = state_recv.active_votes.lock() {
+                                if let Some(vote) = votes.iter_mut().find(|v| v.id == vote_id) {
+                                    vote.closed = true;
+                                }
+                            }
                         }
-                        if parsed["type"] == "live_start" {
+
+                        if msg_type == "live_start" {
                             state_recv.live_active.store(true, Ordering::Relaxed);
                             *state_recv.init_segment.lock().await = None;
                             is_first_binary = true;
-                        } else if parsed["type"] == "live_stop" {
+                        } else if msg_type == "live_stop" {
                             state_recv.live_active.store(false, Ordering::Relaxed);
                             *state_recv.init_segment.lock().await = None;
                             let log_entries: Vec<String>;
