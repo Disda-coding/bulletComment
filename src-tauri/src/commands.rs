@@ -62,7 +62,7 @@ pub async fn stop_server(app_handle: AppHandle) -> Result<(), String> {
     {
         let log = state.danmaku_log.lock().map_err(|e| e.to_string())?;
         if !log.is_empty() {
-            let _ = crate::server::save_danmaku_log(&app_handle, &log);
+            let _ = crate::server::save_danmaku_log(&log);
         }
     }
 

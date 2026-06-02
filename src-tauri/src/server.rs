@@ -17,9 +17,11 @@ use std::sync::{
     Arc,
 };
 use std::sync::Mutex as StdMutex;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter};
 use tokio::sync::{broadcast, Mutex};
 use tokio_util::sync::CancellationToken;
+
+const MAX_HISTORY: usize = 100;
 
 #[derive(Embed)]
 #[folder = "../web-client/"]
@@ -34,6 +36,7 @@ pub struct AppState {
     pub live_active: Arc<AtomicBool>,
     pub init_segment: Arc<Mutex<Option<Vec<u8>>>>,
     pub danmaku_log: Arc<StdMutex<Vec<String>>>,
+    pub danmaku_history: Arc<StdMutex<Vec<String>>>,
 }
 
 fn generate_self_signed_cert() -> Result<(String, String), String> {
@@ -44,23 +47,21 @@ fn generate_self_signed_cert() -> Result<(String, String), String> {
     let key_pair = KeyPair::generate().map_err(|e| format!("Key generation failed: {}", e))?;
     let cert = params.self_signed(&key_pair).map_err(|e| format!("Cert generation failed: {}", e))?;
 
-    let cert_pem = cert.pem();
-    let key_pem = key_pair.serialize_pem();
-
-    Ok((cert_pem, key_pem))
+    Ok((cert.pem(), key_pair.serialize_pem()))
 }
 
-pub fn save_danmaku_log(app_handle: &AppHandle, log: &[String]) -> Result<String, String> {
+pub fn save_danmaku_log(log: &[String]) -> Result<String, String> {
     if log.is_empty() {
         return Ok("".into());
     }
 
-    let app_data_dir = app_handle
-        .path()
-        .app_data_dir()
-        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+    let exe_dir = std::env::current_exe()
+        .map_err(|e| format!("Failed to get exe dir: {}", e))?
+        .parent()
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| std::path::PathBuf::from("."));
 
-    let logs_dir = app_data_dir.join("logs");
+    let logs_dir = exe_dir.join("logs");
     std::fs::create_dir_all(&logs_dir)
         .map_err(|e| format!("Failed to create logs dir: {}", e))?;
 
@@ -86,11 +87,12 @@ pub async fn start_server(
     cancel_token: CancellationToken,
     danmaku_log: Arc<StdMutex<Vec<String>>>,
 ) -> Result<(), String> {
-    let (tx, _) = broadcast::channel::<String>(100);
+    let (tx, _) = broadcast::channel::<String>(256);
     let (bin_tx, _) = broadcast::channel::<Vec<u8>>(512);
     let online_count = Arc::new(AtomicUsize::new(0));
     let live_active = Arc::new(AtomicBool::new(false));
     let init_segment = Arc::new(Mutex::new(None::<Vec<u8>>));
+    let danmaku_history = Arc::new(StdMutex::new(Vec::new()));
 
     let state = AppState {
         tx,
@@ -100,6 +102,7 @@ pub async fn start_server(
         live_active,
         init_segment,
         danmaku_log: danmaku_log.clone(),
+        danmaku_history,
     };
 
     let app = Router::new()
@@ -116,7 +119,6 @@ pub async fn start_server(
         .map_err(|e| format!("TLS config failed: {}", e))?;
 
     let log_for_cleanup = danmaku_log.clone();
-    let handle_for_cleanup = app_handle.clone();
 
     tokio::spawn(async move {
         tokio::select! {
@@ -126,7 +128,7 @@ pub async fn start_server(
         }
         let log = log_for_cleanup.lock().unwrap();
         if !log.is_empty() {
-            let _ = save_danmaku_log(&handle_for_cleanup, &log);
+            let _ = save_danmaku_log(&log);
         }
     });
 
@@ -177,6 +179,13 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
         }).to_string());
     }
 
+    {
+        let history = state.danmaku_history.lock().unwrap();
+        for msg in history.iter() {
+            init_msgs.push(msg.clone());
+        }
+    }
+
     for msg in init_msgs {
         let _ = sender.send(Message::Text(msg.into())).await;
     }
@@ -218,6 +227,7 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
                             let content = parsed["content"].as_str().unwrap_or("");
                             let nickname = parsed["nickname"].as_str().unwrap_or("");
                             let device = parsed["device"].as_str().unwrap_or("");
+                            let color = parsed["color"].as_str().unwrap_or("#FFFFFF");
                             let time = Local::now().format("%H:%M:%S").to_string();
                             let sender_name = if !nickname.is_empty() {
                                 format!("{} ({})", nickname, ip_for_log)
@@ -229,6 +239,12 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
                             let log_entry = format!("[{}] [{}] {}", time, sender_name, content);
                             if let Ok(mut log) = state_recv.danmaku_log.lock() {
                                 log.push(log_entry);
+                            }
+                            if let Ok(mut history) = state_recv.danmaku_history.lock() {
+                                history.push(text.to_string());
+                                if history.len() > MAX_HISTORY {
+                                    history.remove(0);
+                                }
                             }
                         }
                         if parsed["type"] == "live_start" {
@@ -244,7 +260,7 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
                                 log_entries = log.clone();
                             }
                             if !log_entries.is_empty() {
-                                let _ = save_danmaku_log(&state_recv.app_handle, &log_entries);
+                                let _ = save_danmaku_log(&log_entries);
                             }
                         }
                     }
