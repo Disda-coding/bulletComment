@@ -160,6 +160,12 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
 .broadcast-btn.stop:hover { background: #f87171; }
 .broadcast-status { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--text-muted); }
 .broadcast-hint { font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.5; }
+.broadcast-settings { display: flex; flex-direction: column; gap: 8px; padding: 10px 14px; background: var(--card); border-radius: 10px; border: 1px solid var(--border); }
+.broadcast-setting-row { display: flex; align-items: center; gap: 10px; }
+.broadcast-setting-label { font-size: 13px; color: var(--text-muted); white-space: nowrap; min-width: 50px; }
+.broadcast-setting-value { font-size: 13px; color: var(--primary-light); font-weight: 600; min-width: 60px; text-align: right; }
+.broadcast-setting-row input[type="range"] { flex: 1; accent-color: var(--primary); height: 4px; }
+.broadcast-setting-row select { flex: 1; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 13px; outline: none; }
 
 .pip-window {
   position: fixed;
@@ -343,6 +349,22 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
       <div class="broadcast-controls">
         <button class="broadcast-btn start" id="startBroadcastBtn" onclick="startBroadcast()">开始屏幕共享</button>
         <button class="broadcast-btn stop" id="stopBroadcastBtn" onclick="stopBroadcast()" style="display:none;">停止共享</button>
+      </div>
+      <div class="broadcast-settings" id="broadcastSettings">
+        <div class="broadcast-setting-row">
+          <span class="broadcast-setting-label">码率</span>
+          <input type="range" id="bitrateSlider" min="300" max="3000" step="100" value="800" oninput="updateBitrateLabel()">
+          <span class="broadcast-setting-value" id="bitrateLabel">800kbps</span>
+        </div>
+        <div class="broadcast-setting-row">
+          <span class="broadcast-setting-label">分辨率</span>
+          <select id="resolutionSelect">
+            <option value="480">480p (854×480)</option>
+            <option value="540" selected>540p (960×540)</option>
+            <option value="720">720p (1280×720)</option>
+            <option value="1080">1080p (1920×1080)</option>
+          </select>
+        </div>
       </div>
       <p class="broadcast-hint">使用 Chrome 浏览器可共享屏幕、窗口或标签页</p>
     </div>
@@ -613,10 +635,20 @@ function sendDanmaku() {
   danmakuInput.focus();
 }
 
+function updateBitrateLabel() {
+  const val = document.getElementById('bitrateSlider').value;
+  document.getElementById('bitrateLabel').textContent = val >= 1000 ? (val / 1000).toFixed(1) + 'Mbps' : val + 'kbps';
+}
+
 async function startBroadcast() {
   try {
+    const resVal = document.getElementById('resolutionSelect').value;
+    const resMap = { '480': [854, 480], '540': [960, 540], '720': [1280, 720], '1080': [1920, 1080] };
+    const [w, h] = resMap[resVal] || [960, 540];
+    const bitrate = parseInt(document.getElementById('bitrateSlider').value) * 1000;
+
     broadcastStream = await navigator.mediaDevices.getDisplayMedia({
-      video: { cursor: 'always', width: { ideal: 960 }, height: { ideal: 540 } },
+      video: { cursor: 'always', width: { ideal: w }, height: { ideal: h } },
       audio: false
     });
     broadcastVideo.srcObject = broadcastStream;
@@ -625,6 +657,8 @@ async function startBroadcast() {
     broadcastStatus.style.display = 'flex';
     startBroadcastBtn.style.display = 'none';
     stopBroadcastBtn.style.display = 'block';
+    document.getElementById('broadcastSettings').style.opacity = '0.5';
+    document.getElementById('broadcastSettings').style.pointerEvents = 'none';
     broadcastStream.getVideoTracks()[0].onended = () => stopBroadcast();
 
     const selectedMime = 'video/webm;codecs=vp8';
@@ -635,7 +669,7 @@ async function startBroadcast() {
     }
     console.log('[Broadcast] Using mime:', selectedMime);
 
-    mediaRecorder = new MediaRecorder(broadcastStream, { mimeType: selectedMime, videoBitsPerSecond: 800000 });
+    mediaRecorder = new MediaRecorder(broadcastStream, { mimeType: selectedMime, videoBitsPerSecond: bitrate });
     let isFirstChunk = true;
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0 && ws && ws.readyState === WebSocket.OPEN) {
@@ -667,6 +701,8 @@ function stopBroadcast() {
   broadcastStatus.style.display = 'none';
   startBroadcastBtn.style.display = 'block';
   stopBroadcastBtn.style.display = 'none';
+  document.getElementById('broadcastSettings').style.opacity = '1';
+  document.getElementById('broadcastSettings').style.pointerEvents = 'auto';
   isBroadcasting = false;
 
   if (ws && ws.readyState === WebSocket.OPEN) {
