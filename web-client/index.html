@@ -260,6 +260,8 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
 .vote-close-btn { margin-top: 10px; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--danger); background: transparent; color: var(--danger); font-size: 12px; cursor: pointer; transition: all 0.2s; }
 .vote-close-btn:hover { background: rgba(239,68,68,0.15); }
 .vote-empty { text-align: center; color: var(--text-muted); padding: 40px 20px; font-size: 14px; }
+.vote-change-hint { margin-top: 8px; padding: 6px 10px; border-radius: 6px; background: rgba(99,102,241,0.1); color: var(--primary-light); font-size: 12px; text-align: center; animation: voteHintPulse 1s ease-in-out infinite; }
+@keyframes voteHintPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
 </style>
 </head>
 <body>
@@ -392,6 +394,7 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
           </div>
           <button class="vote-add-opt" onclick="addVoteOption()">+ 添加选项</button>
           <button class="vote-submit-btn" id="voteSubmitBtn" onclick="submitVote()">发起投票</button>
+          <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:4px;">投票后5秒内可修改一次选择</div>
         </div>
       </div>
 
@@ -448,6 +451,7 @@ let maxReconnectAttempts = 20;
 let reconnectTimer = null;
 let activeVotes = [];
 let myVotedIds = new Set();
+let myVoteTimes = {};
 let currentVoteSub = 'list';
 let clientIp = '';
 
@@ -1168,6 +1172,9 @@ function castVote(voteId, optionIdx) {
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: 'vote_cast', vote_id: voteId, option_idx: optionIdx, voter }));
     myVotedIds.add(voteId);
+    myVoteTimes[voteId] = Date.now();
+    renderVoteList();
+    setTimeout(() => renderVoteList(), 5500);
   }
 }
 
@@ -1190,6 +1197,8 @@ function renderVoteList() {
     const nickname = document.getElementById('nicknameInput').value.trim();
     const voterKey = nickname || clientIp || '';
     const iVoted = vote.voters && vote.voters[voterKey] !== undefined;
+    const voteTime = myVoteTimes[vote.id] || (vote.vote_times && vote.vote_times[voterKey]) || 0;
+    const canChange = iVoted && !vote.closed && (Date.now() - voteTime) <= 5000;
 
     html += '<div class="vote-card">';
     html += '<div class="vote-card-header">';
@@ -1202,14 +1211,20 @@ function renderVoteList() {
       const pct = totalVotes > 0 ? Math.round(opt.count / totalVotes * 100) : 0;
       const isMyVote = iVoted && vote.voters[voterKey] === idx;
       const canVote = !vote.closed && !iVoted;
+      const canClick = canVote || (canChange && !isMyVote);
       html += '<div class="vote-option-item">';
-      html += '<button class="vote-option-btn' + (isMyVote ? ' voted' : '') + (!canVote ? ' disabled' : '') + '"'
-        + (canVote ? ' onclick="castVote(\'' + vote.id + '\',' + idx + ')"' : '') + '>';
+      html += '<button class="vote-option-btn' + (isMyVote ? ' voted' : '') + (!canClick && !canVote ? ' disabled' : '') + '"'
+        + (canClick ? ' onclick="castVote(\'' + vote.id + '\',' + idx + ')"' : '') + '>';
       html += '<div class="vote-progress" style="width:' + pct + '%"></div>';
       html += '<span class="vote-option-label">' + escapeHtml(opt.label) + (isMyVote ? ' ✓' : '') + '</span>';
       html += '<span class="vote-option-count">' + opt.count + '票 (' + pct + '%)</span>';
       html += '</button></div>';
     });
+
+    if (canChange) {
+      const remain = Math.max(0, 5 - Math.floor((Date.now() - voteTime) / 1000));
+      html += '<div class="vote-change-hint">选错可修改，' + remain + '秒内可改投其他选项</div>';
+    }
 
     html += '</div>';
   });

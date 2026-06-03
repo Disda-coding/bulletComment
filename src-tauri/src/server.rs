@@ -41,6 +41,7 @@ pub struct Vote {
     pub question: String,
     pub options: Vec<VoteOption>,
     pub voters: HashMap<String, usize>,
+    pub vote_times: HashMap<String, i64>,
     pub created_by: String,
     pub created_at: String,
     pub closed: bool,
@@ -287,16 +288,35 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
                             let vote_id = parsed["vote_id"].as_str().unwrap_or("");
                             let option_idx = parsed["option_idx"].as_u64().map(|v| v as usize);
                             let voter = parsed["voter"].as_str().unwrap_or(&ip_for_log);
+                            let now = chrono::Utc::now().timestamp_millis();
                             if let (Some(idx), Ok(mut votes)) = (option_idx, state_recv.active_votes.lock()) {
                                 if let Some(vote) = votes.iter_mut().find(|v| v.id == vote_id) {
-                                    if !vote.closed && !vote.voters.contains_key(voter) && idx < vote.options.len() {
-                                        vote.voters.insert(voter.to_string(), idx);
-                                        vote.options[idx].count += 1;
-                                        let updated = serde_json::json!({
-                                            "type": "vote_update",
-                                            "vote": vote
-                                        }).to_string();
-                                        let _ = state_recv.tx.send(updated);
+                                    if !vote.closed && idx < vote.options.len() {
+                                        if let Some(&old_idx) = vote.voters.get(voter) {
+                                            let can_change = vote.vote_times.get(voter)
+                                                .map(|&t| now - t <= 5000)
+                                                .unwrap_or(false);
+                                            if can_change && old_idx != idx {
+                                                vote.options[old_idx].count = vote.options[old_idx].count.saturating_sub(1);
+                                                vote.options[idx].count += 1;
+                                                vote.voters.insert(voter.to_string(), idx);
+                                                vote.vote_times.insert(voter.to_string(), now);
+                                                let updated = serde_json::json!({
+                                                    "type": "vote_update",
+                                                    "vote": vote
+                                                }).to_string();
+                                                let _ = state_recv.tx.send(updated);
+                                            }
+                                        } else {
+                                            vote.voters.insert(voter.to_string(), idx);
+                                            vote.vote_times.insert(voter.to_string(), now);
+                                            vote.options[idx].count += 1;
+                                            let updated = serde_json::json!({
+                                                "type": "vote_update",
+                                                "vote": vote
+                                            }).to_string();
+                                            let _ = state_recv.tx.send(updated);
+                                        }
                                     }
                                 }
                             }
