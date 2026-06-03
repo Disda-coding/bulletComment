@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 
 const serverAddress = ref("");
@@ -27,6 +28,9 @@ async function startServer() {
   try {
     serverAddress.value = await invoke<string>("start_server", { port: port.value });
     isRunning.value = true;
+    try {
+      await openUrl(serverAddress.value);
+    } catch {}
   } catch (e) {
     errorMsg.value = String(e);
   }
