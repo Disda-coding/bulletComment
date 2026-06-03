@@ -41,6 +41,7 @@ pub struct Vote {
     pub question: String,
     pub options: Vec<VoteOption>,
     pub voters: HashMap<String, usize>,
+    #[serde(default)]
     pub vote_times: HashMap<String, i64>,
     pub created_by: String,
     pub created_at: String,
