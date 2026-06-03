@@ -355,7 +355,7 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
       <div class="broadcast-settings" id="broadcastSettings">
         <div class="broadcast-setting-row">
           <span class="broadcast-setting-label">码率</span>
-          <input type="range" id="bitrateSlider" min="300" max="3000" step="100" value="800" oninput="updateBitrateLabel()">
+          <input type="range" id="bitrateSlider" min="300" max="10000" step="100" value="800" oninput="updateBitrateLabel()">
           <span class="broadcast-setting-value" id="bitrateLabel">800kbps</span>
         </div>
         <div class="broadcast-setting-row">
@@ -1195,7 +1195,7 @@ function renderVoteList() {
   activeVotes.forEach(vote => {
     const totalVotes = vote.options.reduce((sum, o) => sum + o.count, 0);
     const nickname = document.getElementById('nicknameInput').value.trim();
-    const voterKey = nickname || clientIp || '';
+    const voterKey = nickname || clientIp || deviceName;
     const iVoted = vote.voters && vote.voters[voterKey] !== undefined;
     const voteTime = myVoteTimes[vote.id] || (vote.vote_times && vote.vote_times[voterKey]) || 0;
     const canChange = iVoted && !vote.closed && (Date.now() - voteTime) <= 5000;
