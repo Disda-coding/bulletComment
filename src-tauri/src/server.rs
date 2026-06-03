@@ -7,6 +7,7 @@ use axum::{
     Router,
 };
 use axum_server::tls_rustls::RustlsConfig;
+use bytes::Bytes;
 use chrono::Local;
 use futures_util::{SinkExt, StreamExt};
 use rcgen::{CertificateParams, DnType, KeyPair};
@@ -48,7 +49,7 @@ pub struct Vote {
 #[derive(Clone)]
 pub struct AppState {
     pub tx: broadcast::Sender<String>,
-    pub bin_tx: broadcast::Sender<Vec<u8>>,
+    pub bin_tx: broadcast::Sender<Bytes>,
     pub app_handle: AppHandle,
     pub online_count: Arc<AtomicUsize>,
     pub live_active: Arc<AtomicBool>,
@@ -103,7 +104,7 @@ pub async fn start_server(
     danmaku_log: Arc<StdMutex<Vec<String>>>,
 ) -> Result<(), String> {
     let (tx, _) = broadcast::channel::<String>(256);
-    let (bin_tx, _) = broadcast::channel::<Vec<u8>>(512);
+    let (bin_tx, _) = broadcast::channel::<Bytes>(512);
     let online_count = Arc::new(AtomicUsize::new(0));
     let live_active = Arc::new(AtomicBool::new(false));
     let init_segment = Arc::new(Mutex::new(None::<Vec<u8>>));
@@ -221,7 +222,7 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
     if state.live_active.load(Ordering::Relaxed) {
         let init_seg = state.init_segment.lock().await;
         if let Some(data) = init_seg.as_ref() {
-            let _ = sender.send(Message::Binary(data.clone().into())).await;
+            let _ = sender.send(Message::Binary(Bytes::copy_from_slice(data))).await;
         }
     }
 
@@ -234,7 +235,7 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
                     }
                 }
                 Ok(data) = bin_rx.recv() => {
-                    if sender.send(Message::Binary(data.into())).await.is_err() {
+                    if sender.send(Message::Binary(data)).await.is_err() {
                         break;
                     }
                 }
@@ -334,7 +335,7 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
                         *state_recv.init_segment.lock().await = Some(data.to_vec());
                         is_first_binary = false;
                     }
-                    let _ = state_recv.bin_tx.send(data.to_vec());
+                    let _ = state_recv.bin_tx.send(Bytes::copy_from_slice(&data));
                 }
                 _ => {}
             }

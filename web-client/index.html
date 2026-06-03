@@ -616,7 +616,7 @@ function sendDanmaku() {
 async function startBroadcast() {
   try {
     broadcastStream = await navigator.mediaDevices.getDisplayMedia({
-      video: { cursor: 'always', width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: { cursor: 'always', width: { ideal: 960 }, height: { ideal: 540 } },
       audio: false
     });
     broadcastVideo.srcObject = broadcastStream;
@@ -635,7 +635,7 @@ async function startBroadcast() {
     }
     console.log('[Broadcast] Using mime:', selectedMime);
 
-    mediaRecorder = new MediaRecorder(broadcastStream, { mimeType: selectedMime, videoBitsPerSecond: 1500000 });
+    mediaRecorder = new MediaRecorder(broadcastStream, { mimeType: selectedMime, videoBitsPerSecond: 800000 });
     let isFirstChunk = true;
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0 && ws && ws.readyState === WebSocket.OPEN) {
@@ -646,7 +646,7 @@ async function startBroadcast() {
         e.data.arrayBuffer().then(buf => ws.send(buf));
       }
     };
-    mediaRecorder.start(200);
+    mediaRecorder.start(500);
     isBroadcasting = true;
     console.log('[Broadcast] MediaRecorder started');
 
@@ -753,8 +753,8 @@ function handleVideoChunk(data) {
   console.log('[Viewer] Received chunk, size:', chunk.length, 'queue before:', sourceBufferQueue.length);
 
   sourceBufferQueue.push(chunk);
-  if (sourceBufferQueue.length > 300) {
-    sourceBufferQueue.splice(0, sourceBufferQueue.length - 300);
+  if (sourceBufferQueue.length > 150) {
+    sourceBufferQueue.splice(0, sourceBufferQueue.length - 150);
   }
 
   if (!sourceBuffer || !mediaSource || mediaSource.readyState !== 'open') {

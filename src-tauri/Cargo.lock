@@ -430,6 +430,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "axum-server",
+ "bytes",
  "chrono",
  "futures-util",
  "local-ip-address",
