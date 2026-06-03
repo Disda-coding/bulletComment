@@ -449,6 +449,7 @@ let reconnectTimer = null;
 let activeVotes = [];
 let myVotedIds = new Set();
 let currentVoteSub = 'list';
+let clientIp = '';
 
 function getDeviceName() {
   const ua = navigator.userAgent;
@@ -1134,7 +1135,7 @@ function submitVote() {
   const nickname = document.getElementById('nicknameInput').value.trim();
   const voter = nickname || (clientIp || deviceName);
 
-  const voteId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+  const voteId = 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
   const vote = {
     id: voteId,
     question: question,
@@ -1221,8 +1222,6 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
-
-let clientIp = '';
 
 connect();
 </script>

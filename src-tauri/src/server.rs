@@ -144,7 +144,7 @@ pub async fn start_server(
                 .serve(app.into_make_service_with_connect_info::<SocketAddr>()) => {},
             _ = cancel_token.cancelled() => {},
         }
-        let log = log_for_cleanup.lock().unwrap();
+        let log = log_for_cleanup.lock().unwrap_or_else(|e| e.into_inner());
         if !log.is_empty() {
             let _ = save_danmaku_log(&log);
         }
@@ -199,14 +199,14 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
     }
 
     {
-        let history = state.danmaku_history.lock().unwrap();
+        let history = state.danmaku_history.lock().unwrap_or_else(|e| e.into_inner());
         for msg in history.iter() {
             init_msgs.push(msg.clone());
         }
     }
 
     {
-        let votes = state.active_votes.lock().unwrap();
+        let votes = state.active_votes.lock().unwrap_or_else(|e| e.into_inner());
         for vote in votes.iter() {
             init_msgs.push(serde_json::json!({
                 "type": "vote_create",
@@ -306,8 +306,14 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
                             if let Ok(mut votes) = state_recv.active_votes.lock() {
                                 if let Some(vote) = votes.iter_mut().find(|v| v.id == vote_id) {
                                     vote.closed = true;
+                                    let updated = serde_json::json!({
+                                        "type": "vote_update",
+                                        "vote": vote
+                                    }).to_string();
+                                    let _ = state_recv.tx.send(updated);
                                 }
                             }
+                            continue;
                         }
 
                         if msg_type == "live_start" {
@@ -319,7 +325,7 @@ async fn handle_socket(socket: WebSocket, state: AppState, client_ip: String) {
                             *state_recv.init_segment.lock().await = None;
                             let log_entries: Vec<String>;
                             {
-                                let log = state_recv.danmaku_log.lock().unwrap();
+                                let log = state_recv.danmaku_log.lock().unwrap_or_else(|e| e.into_inner());
                                 log_entries = log.clone();
                             }
                             if !log_entries.is_empty() {

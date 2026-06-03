@@ -6,10 +6,3 @@ export interface DanmakuMessage {
   action?: string;
   count?: number;
 }
-
-export interface ServerStatus {
-  running: boolean;
-  address: string;
-  port: number;
-  online_count: number;
-}

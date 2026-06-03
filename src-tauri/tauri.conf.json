@@ -1,5 +1,4 @@
 {
-  "$schema": "https://raw.githubusercontent.com/nicegram/nicegram-ios-tauri-v2/refs/heads/main/core/tauri-config-schema/schema.json",
   "productName": "弹幕系统",
   "version": "0.1.0",
   "identifier": "com.bulletcomment.app",
